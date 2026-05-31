@@ -255,6 +255,7 @@ Gfx* Play_SetFog(PlayState* this, Gfx* gfx) {
     s32 fogA = 0;
     if (this->skyboxId != SKYBOX_NONE && this->lightCtx.fogNear < 1000) {
         fogA = (1000 - this->lightCtx.fogNear) * (255.0f / 50);
+        fogA = CLAMP(fogA, 0, 255);
     }
     return Gfx_SetFog(gfx, this->lightCtx.fogColor[0], this->lightCtx.fogColor[1], this->lightCtx.fogColor[2], fogA,
                       this->lightCtx.fogNear, 1000);
