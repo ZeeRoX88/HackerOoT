@@ -49,7 +49,6 @@ typedef enum SkyboxDrawType {
 } SkyboxDrawType;
 
 typedef struct SkyboxContext {
-    /* 0x000 */ char unk_00[0x128];
     /* 0x128 */ void* staticSegments[2];
     /* 0x130 */ u16 (*palettes)[256];
     /* 0x134 */ Gfx (*dListBuf)[150];
@@ -57,7 +56,8 @@ typedef struct SkyboxContext {
     /* 0x13C */ Vtx* roomVtx;
     /* 0x140 */ s16 drawType;
     /* 0x144 */ Vec3f rot;
-    /* 0x150 */ char unk_150[0x10];
+                u8 skyboxTopColor[3];
+                u8 skyboxBottomColor[3];
 } SkyboxContext; // size = 0x160
 
 typedef struct SkyboxFile {
@@ -71,6 +71,8 @@ void Skybox_Init(struct GameState* state, SkyboxContext* skyboxCtx, s16 skyboxId
 Mtx* Skybox_UpdateMatrix(SkyboxContext* skyboxCtx, f32 x, f32 y, f32 z);
 void Skybox_Draw(SkyboxContext* skyboxCtx, struct GraphicsContext* gfxCtx, struct LightContext* lightCtx, s16 skyboxId,
                  s16 blend, f32 x, f32 y, f32 z);
+void Skybox_DrawNew(SkyboxContext* skyboxCtx, struct GraphicsContext* gfxCtx, struct LightContext* lightCtx, s16 skyboxId,
+                    s16 blend, f32 x, f32 y, f32 z);
 void Skybox_Update(SkyboxContext* skyboxCtx);
 
 #endif

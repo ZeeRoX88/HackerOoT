@@ -253,9 +253,8 @@ void func_800BC88C(PlayState* this) {
  */
 Gfx* Play_SetFog(PlayState* this, Gfx* gfx) {
     s32 fogA = 0;
-    if (this->skyboxId != SKYBOX_NONE && this->lightCtx.fogNear < 980) {
-        fogA = (255 * (1000 - this->lightCtx.fogNear) + 25) / 50;
-        fogA = CLAMP(fogA, 0, 255);
+    if (this->skyboxId != SKYBOX_NONE && this->lightCtx.fogNear < 1000) {
+        fogA = (1000 - this->lightCtx.fogNear) * (255.0f / 50);
     }
     return Gfx_SetFog(gfx, this->lightCtx.fogColor[0], this->lightCtx.fogColor[1], this->lightCtx.fogColor[2], fogA,
                       this->lightCtx.fogNear, 1000);
@@ -621,6 +620,8 @@ void Play_Init(GameState* thisx) {
 
     //! TODO: investigate issue with this variable set to a random value
     this->gameplayFrames = 0;
+
+    Environment_InitClouds(this);
 }
 
 void Play_Update(PlayState* this) {
@@ -1386,6 +1387,7 @@ void Play_Draw(PlayState* this) {
     GraphicsContext* gfxCtx = this->state.gfxCtx;
     Lights* sp228;
     Vec3f sp21C;
+    u8 envDrawCheck = true;
 
     OPEN_DISPS(gfxCtx, "../z_play.c", 3907);
 
@@ -1501,6 +1503,7 @@ void Play_Draw(PlayState* this) {
 
             TransitionTile_Draw(&gTransitionTile, &sp88);
             POLY_OPA_DISP = sp88;
+            envDrawCheck = false;
             goto Play_Draw_DrawOverlayElements;
         }
 
@@ -1530,22 +1533,27 @@ void Play_Draw(PlayState* this) {
 
             PreRender_RestoreFramebuffer(&this->pauseBgPreRender, &gfxP);
             POLY_OPA_DISP = gfxP;
+            envDrawCheck = false;
 
             goto Play_Draw_DrawOverlayElements;
         }
 
         if (!DEBUG_FEATURES || (R_HREG_MODE != HREG_MODE_PLAY) || R_PLAY_DRAW_SKYBOX) {
             if (this->skyboxId && (this->skyboxId != SKYBOX_UNSET_1D) && !this->envCtx.skyboxDisabled) {
-                if ((this->skyboxId == SKYBOX_NORMAL_SKY) || (this->skyboxId == SKYBOX_CUTSCENE_MAP)) {
-                    Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
-                    Skybox_Draw(&this->skyboxCtx, gfxCtx, &this->lightCtx, this->skyboxId, this->envCtx.skyboxBlend,
+                if ((this->skyboxId == SKYBOX_NORMAL_SKY) || (this->skyboxId == SKYBOX_CUTSCENE_MAP) || this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
+                    if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
+                        Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
+                    }
+                    Skybox_DrawNew(&this->skyboxCtx, gfxCtx, &this->lightCtx, this->skyboxId, this->envCtx.skyboxBlend,
                                 this->view.eye.x, this->view.eye.y, this->view.eye.z);
-                } else if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
-                    Skybox_Draw(&this->skyboxCtx, gfxCtx, &this->lightCtx, this->skyboxId, 0, this->view.eye.x,
-                                this->view.eye.y, this->view.eye.z);
+                    Environment_DrawCloudStorm(this);
+                    Environment_DrawCloudHorizon(this);
+                    Environment_DrawClouds(this);
                 }
             }
         }
+
+        Environment_SetupSkyboxStars(this);
 
         if (!DEBUG_FEATURES || (R_HREG_MODE != HREG_MODE_PLAY) ||
             (R_PLAY_DRAW_ENV_FLAGS & PLAY_ENV_DRAW_SUN_AND_MOON)) {
@@ -1736,6 +1744,10 @@ Play_Draw_skip:
 #endif
 
     Camera_Finish(GET_ACTIVE_CAM(this));
+
+    if (envDrawCheck) {
+        Environment_DrawSkyboxStars(this);
+    }
 
     CLOSE_DISPS(gfxCtx, "../z_play.c", 4508);
 }

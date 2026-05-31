@@ -3,6 +3,7 @@
 #include "sys_matrix.h"
 #include "light.h"
 #include "skybox.h"
+#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 
 Mtx* sSkyboxDrawMatrix;
 
@@ -100,6 +101,142 @@ void Skybox_Draw(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightContext
     gDPPipeSync(POLY_OPA_DISP++);
 
     CLOSE_DISPS(gfxCtx, "../z_vr_box_draw.c", 125);
+}
+
+Vtx skybox_cylinder_vertices[37] = {
+	{{ {0, 0, -100}, 0, {1008, 240}, {180, 214, 255, 255} }},
+	{{ {71, 35, -71}, 0, {880, -16}, {57, 73, 192, 255} }},
+	{{ {0, 35, -100}, 0, {1008, -16}, {57, 73, 192, 255} }},
+	{{ {71, 0, -71}, 0, {880, 240}, {180, 214, 255, 255} }},
+	{{ {0, -35, -100}, 0, {1008, 496}, {57, 73, 192, 255} }},
+	{{ {71, -35, -71}, 0, {880, 496}, {57, 73, 192, 255} }},
+	{{ {100, 0, 0}, 0, {752, 240}, {180, 214, 255, 255} }},
+	{{ {100, -35, 0}, 0, {752, 496}, {57, 73, 192, 255} }},
+	{{ {71, 0, 71}, 0, {624, 240}, {180, 214, 255, 255} }},
+	{{ {71, -35, 71}, 0, {624, 496}, {57, 73, 192, 255} }},
+	{{ {0, 0, 100}, 0, {496, 240}, {180, 214, 255, 255} }},
+	{{ {0, -35, 100}, 0, {496, 496}, {57, 73, 192, 255} }},
+	{{ {-71, 0, 71}, 0, {368, 240}, {180, 214, 255, 255} }},
+	{{ {-71, -35, 71}, 0, {368, 496}, {57, 73, 192, 255} }},
+	{{ {-100, 0, 0}, 0, {240, 240}, {180, 214, 255, 255} }},
+	{{ {-100, -35, 0}, 0, {240, 496}, {57, 73, 192, 255} }},
+	{{ {-71, 0, -71}, 0, {112, 240}, {180, 214, 255, 255} }},
+	{{ {-71, -35, -71}, 0, {112, 496}, {57, 73, 192, 255} }},
+	{{ {0, 0, -100}, 0, {-16, 240}, {180, 214, 255, 255} }},
+	{{ {0, -35, -100}, 0, {-16, 496}, {57, 73, 192, 255} }},
+	{{ {0, 35, -100}, 0, {-16, -16}, {57, 73, 192, 255} }},
+	{{ {-71, 35, -71}, 0, {112, -16}, {57, 73, 192, 255} }},
+	{{ {-100, 35, 0}, 0, {240, -16}, {57, 73, 192, 255} }},
+	{{ {-71, 35, 71}, 0, {368, -16}, {57, 73, 192, 255} }},
+	{{ {0, 35, 100}, 0, {496, -16}, {57, 73, 192, 255} }},
+	{{ {71, 35, 71}, 0, {624, -16}, {57, 73, 192, 255} }},
+	{{ {100, 35, 0}, 0, {752, -16}, {57, 73, 192, 255} }},
+	{{ {0, 35, -100}, 0, {240, 506}, {57, 73, 192, 255} }},
+	{{ {71, 35, -71}, 0, {414, 578}, {57, 73, 192, 255} }},
+	{{ {100, 35, 0}, 0, {486, 752}, {57, 73, 192, 255} }},
+	{{ {0, 35, 100}, 0, {240, 998}, {57, 73, 192, 255} }},
+	{{ {71, 35, 71}, 0, {414, 926}, {57, 73, 192, 255} }},
+	{{ {0, 35, 100}, 0, {240, 998}, {57, 73, 192, 255} }},
+	{{ {-100, 35, 0}, 0, {-6, 752}, {57, 73, 192, 255} }},
+	{{ {0, 35, -100}, 0, {240, 506}, {57, 73, 192, 255} }},
+	{{ {-71, 35, 71}, 0, {66, 926}, {57, 73, 192, 255} }},
+	{{ {-71, 35, -71}, 0, {66, 578}, {57, 73, 192, 255} }},
+};
+
+void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightContext* lightCtx, s16 skyboxId, s16 blend, f32 x, f32 y, f32 z) {
+    Vtx* vtx;
+    u8 i;
+    /* u32 filterA; */
+
+    // you can use this for regular fog if you want
+    /* if (lightCtx->fogNear < 1000) {
+        filterA = (1000 - lightCtx->fogNear) * (255.0f / 50);
+        if (filterA > 255) {
+            filterA = 255;
+        }
+    } */
+
+    vtx = Graph_Alloc(gfxCtx, sizeof(Vtx) * 37);
+
+    if (vtx != NULL) {
+        for (i = 0; i < 37; i++) {
+            vtx[i].v.ob[0] = skybox_cylinder_vertices[i].v.ob[0];
+            vtx[i].v.ob[1] = skybox_cylinder_vertices[i].v.ob[1];
+            vtx[i].v.ob[2] = skybox_cylinder_vertices[i].v.ob[2];
+
+            vtx[i].v.flag = 0;
+            vtx[i].v.tc[0] = skybox_cylinder_vertices[i].v.tc[0];
+            vtx[i].v.tc[1] = skybox_cylinder_vertices[i].v.tc[1];
+
+            vtx[i].v.cn[3] = 255; // vertex color alpha
+
+            switch (i) {
+                case 0:
+                case 3:
+                case 6:
+                case 8:
+                case 10:
+                case 12:
+                case 14:
+                case 16:
+                case 18: // cloud color bottom
+                    vtx[i].v.cn[0] = skyboxCtx->skyboxBottomColor[0];
+                    vtx[i].v.cn[1] = skyboxCtx->skyboxBottomColor[1];
+                    vtx[i].v.cn[2] = skyboxCtx->skyboxBottomColor[2];
+                    break;
+                default: // cloud color top
+                    vtx[i].v.cn[0] = skyboxCtx->skyboxTopColor[0];
+                    vtx[i].v.cn[1] = skyboxCtx->skyboxTopColor[1];
+                    vtx[i].v.cn[2] = skyboxCtx->skyboxTopColor[2];
+                    break;
+            }
+        }
+    }
+
+    // to emulate fog, you can remove combined color alpha and add primitive color alpha to the combiner cycle 2
+    // or just manually add the stupid fog
+    
+    OPEN_DISPS(gfxCtx, "../z_cheap_proc.c", 214);
+
+    /* POLY_OPA_DISP = Gfx_SetFog(POLY_OPA_DISP, lightCtx->fogColor[0], lightCtx->fogColor[1], lightCtx->fogColor[2], filterA, lightCtx->fogNear, 1000); */
+
+    sSkyboxDrawMatrix = Graph_Alloc(gfxCtx, sizeof(Mtx));
+    Matrix_Translate(x, y, z, MTXMODE_NEW);
+    Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
+    MATRIX_TO_MTX(sSkyboxDrawMatrix, "../z_vr_box_draw.c", 76);
+    gSPMatrix(POLY_OPA_DISP++, sSkyboxDrawMatrix, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+
+    gSPDisplayList(POLY_OPA_DISP++, mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque);
+
+    gSPVertex(POLY_OPA_DISP++, vtx + 0, 32, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 0, 1, 2, 0, 0, 3, 1, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 4, 3, 0, 0, 4, 5, 3, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 5, 6, 3, 0, 5, 7, 6, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 7, 8, 6, 0, 7, 9, 8, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 9, 10, 8, 0, 9, 11, 10, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 11, 12, 10, 0, 11, 13, 12, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 13, 14, 12, 0, 13, 15, 14, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 15, 16, 14, 0, 15, 17, 16, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 17, 18, 16, 0, 17, 19, 18, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 16, 18, 20, 0, 16, 20, 21, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 14, 16, 21, 0, 14, 21, 22, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 12, 14, 22, 0, 12, 22, 23, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 10, 12, 23, 0, 10, 23, 24, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 8, 10, 24, 0, 8, 24, 25, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 6, 8, 25, 0, 6, 25, 26, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 3, 6, 26, 0, 3, 26, 1, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 27, 28, 29, 0, 27, 29, 30, 0);
+    gSP1Triangle(POLY_OPA_DISP++, 29, 31, 30, 0);
+
+    gSPVertex(POLY_OPA_DISP++, vtx + 32, 5, 0);
+    gSP2Triangles(POLY_OPA_DISP++, 0, 1, 2, 0, 0, 3, 1, 0);
+    gSP1Triangle(POLY_OPA_DISP++, 1, 4, 2, 0);
+
+    // reset regular gameplay fog
+    /* POLY_OPA_DISP = Gfx_SetFog2(POLY_OPA_DISP, lightCtx->fogColor[0], lightCtx->fogColor[1], lightCtx->fogColor[2], 0,
+                       lightCtx->fogNear, 1000); */
+
+    CLOSE_DISPS(gfxCtx, "../z_cheap_proc.c", 219);
 }
 
 void Skybox_Update(SkyboxContext* skyboxCtx) {

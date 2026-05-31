@@ -172,29 +172,32 @@ typedef struct EnvLightSettings {
     /* 0x14 */ s16 zFar;
 } EnvLightSettings; // size = 0x16
 
+typedef struct {
+    Vec3f rot;
+    f32 scale;
+    u8 alpha;
+    u8 texId;
+    u8 targetPitch; // degrees
+} EnvClouds;
+
 typedef struct EnvironmentContext {
-    /* 0x00 */ char unk_00[0x02];
     /* 0x02 */ u16 sceneTimeSpeed; // time speed value from the scene file
     /* 0x04 */ Vec3f sunPos; // moon position can be found by negating the sun position
     /* 0x10 */ u8 skybox1Index;
     /* 0x11 */ u8 skybox2Index;
-    /* 0x12 */ char unk_12[0x01];
     /* 0x13 */ u8 skyboxBlend;
-    /* 0x14 */ char unk_14[0x01];
     /* 0x15 */ u8 skyboxDisabled;
     /* 0x16 */ u8 sunMoonDisabled;
     /* 0x17 */ u8 skyboxConfig; // only used for `LIGHT_MODE_TIME`
     /* 0x18 */ u8 changeSkyboxNextConfig;
     /* 0x19 */ u8 changeSkyboxState;
     /* 0x1A */ u16 changeSkyboxTimer;
-    /* 0x1C */ char unk_1C[0x02];
     /* 0x1E */ u8 lightMode;
     /* 0x1F */ u8 lightConfig; // only used for `LIGHT_MODE_TIME`
     /* 0x20 */ u8 changeLightNextConfig;
     /* 0x21 */ u8 changeLightEnabled;
     /* 0x22 */ u16 changeLightTimer;
     /* 0x24 */ u16 changeDuration; // total time to change skybox and light configs
-    /* 0x26 */ char unk_26[0x02];
     /* 0x28 */ LightInfo dirLight1; // used as sunlight for `LIGHT_MODE_TIME`
     /* 0x36 */ LightInfo dirLight2; // used as moonlight for `LIGHT_MODE_TIME`
     /* 0x44 */ s8 skyboxDmaState;
@@ -208,7 +211,6 @@ typedef struct EnvironmentContext {
     /* 0x98 */ s16 adjFogColor[3];
     /* 0x9E */ s16 adjFogNear;
     /* 0xA0 */ s16 adjZFar;
-    /* 0xA2 */ char unk_A2[0x06];
     /* 0xA8 */ Vec3s windDirection;
     /* 0xB0 */ f32 windSpeed;
     /* 0xB4 */ u8 numLightSettings;
@@ -233,7 +235,7 @@ typedef struct EnvironmentContext {
     /* 0xE9 */ u8 customSkyboxFilter;
     /* 0xEA */ u8 skyboxFilterColor[4];
     /* 0xEE */ u8 precipitation[PRECIP_MAX];
-    /* 0xF3 */ char unk_F3[0x09];
+               EnvClouds clouds[32];
 } EnvironmentContext; // size = 0xFC
 
 extern u8 gSkyboxIsChanging;
@@ -300,5 +302,15 @@ s32 Environment_IsForcedSequenceDisabled(void);
 void Environment_PlayStormNatureAmbience(struct PlayState* play);
 void Environment_StopStormNatureAmbience(struct PlayState* play);
 void Environment_WarpSongLeave(struct PlayState* play);
+
+void Environment_DrawCloudStorm(struct PlayState* play);
+void Environment_DrawCloudHorizon(struct PlayState* play);
+void Environment_DrawClouds(struct PlayState* play);
+
+void Environment_InitClouds(struct PlayState* play);
+void Environment_UpdateClouds(struct PlayState* play);
+
+void Environment_SetupSkyboxStars(struct PlayState* play);
+void Environment_DrawSkyboxStars(struct PlayState* play);
 
 #endif

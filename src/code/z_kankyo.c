@@ -32,8 +32,11 @@
 #include "player.h"
 #include "save.h"
 #include "debug.h"
+#include "skin_matrix.h"
+#include "rand.h"
 
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
+#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 #include "assets/objects/gameplay_field_keep/gameplay_field_keep.h"
 
 typedef enum LightningBoltState {
@@ -209,6 +212,54 @@ SkyboxFile gNormalSkyFiles[] = {
     },
 };
 
+u8 skyboxColors[][2][3] = {
+    // dawn
+    {
+        {112, 104, 144}, 
+        {192, 152, 136}
+    },
+    // day
+    {
+        {57, 73, 192}, 
+        {180, 214, 255}
+    },
+    // dusk
+    {
+        {180, 110, 120}, 
+        {255, 180, 90}
+    },
+    // night
+    {
+        {0, 8, 32}, 
+        {0, 56, 168}
+    },
+    // cloudy dawn
+    {
+        {24, 24, 32}, 
+        {96, 82, 70}
+    },
+    // cloudy day
+    {
+        {56, 56, 64}, 
+        {112, 112, 96}
+    },
+    // cloudy dusk
+    {
+        {72, 64, 48}, 
+        {32, 24, 16}
+    },
+    // cloudy night
+    {
+        {48, 48, 48}, 
+        {0, 0, 0}
+    },
+    // holy
+    {
+        {255, 255, 255}, 
+        {255, 255, 255}
+    },
+};
+
 u8 sSandstormColorIndex = 0;
 u8 sNextSandstormColorIndex = 0;
 f32 sSandstormLerpScale = 0.0f;
@@ -249,6 +300,12 @@ LightInfo sSGameOverLightInfo;
 u8 sGameOverLightsIntensity;
 u16 sSandstormScroll;
 
+u16 gSkyboxNumStars;
+Gfx* sSkyboxStarsDList;
+s32 sEnvSkyboxNumStars = 0;
+f32 sStarAlpha;
+u8 sCloudDensity = 16;
+
 #define ZBUFVAL_EXPONENT(v) (((v) >> 15) & 7)
 #define ZBUFVAL_MANTISSA(v) (((v) >> 4) & 0x7FF)
 
@@ -284,6 +341,14 @@ void Environment_GraphCallback(GraphicsContext* gfxCtx, void* param) {
 void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) {
     u8 i;
     PlayState* play = play2;
+
+    sEnvSkyboxNumStars = 0;
+    gSkyboxNumStars = 200; // maybe you could slowly increase and decrease
+
+    for (i = 0; i < 3; i++) {
+        play->skyboxCtx.skyboxTopColor[i] = skyboxColors[envCtx->skybox1Index][0][i];
+        play->skyboxCtx.skyboxBottomColor[i] = skyboxColors[envCtx->skybox1Index][1][i];
+    }
 
     gSaveContext.sunsSongState = SUNSSONG_INACTIVE;
 
@@ -728,8 +793,8 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
         Environment_UpdateStorm(envCtx, skyboxBlend);
 
         if (envCtx->changeSkyboxState >= CHANGE_SKYBOX_ACTIVE) {
-            newSkybox1Index = gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index;
-            newSkybox2Index = gTimeBasedSkyboxConfigs[envCtx->changeSkyboxNextConfig][i].skybox2Index;
+            /* newSkybox1Index = gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index;
+            newSkybox2Index = gTimeBasedSkyboxConfigs[envCtx->changeSkyboxNextConfig][i].skybox2Index; */
 
             skyboxBlend = ((f32)envCtx->changeDuration - envCtx->changeSkyboxTimer) / (f32)envCtx->changeDuration * 255;
             envCtx->changeSkyboxTimer--;
@@ -737,6 +802,39 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
             if (envCtx->changeSkyboxTimer <= 0) {
                 envCtx->changeSkyboxState = CHANGE_SKYBOX_INACTIVE;
                 envCtx->skyboxConfig = envCtx->changeSkyboxNextConfig;
+            }
+        }
+
+        f32 timeChangeBlend;
+        f32 configBlend;
+
+        timeChangeBlend =
+                        Environment_LerpWeight(gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].endTime,
+                                               gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].startTime,
+                                               ((void)0, gSaveContext.skyboxTime));
+
+        if (envCtx->changeSkyboxState >= CHANGE_SKYBOX_ACTIVE) { // cloudy
+            u8 blend8[2];
+            configBlend = ((f32)envCtx->changeDuration - envCtx->changeSkyboxTimer) / (f32)envCtx->changeDuration;
+
+            // the i loop is missing here
+            if (envCtx->skyboxConfig != envCtx->changeSkyboxNextConfig) {
+                for (u8 j = 0; j < 3; j++) {
+                blend8[0] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index][0][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox2Index][0][j], timeChangeBlend);
+                blend8[1] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->changeSkyboxNextConfig][i].skybox1Index][0][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->changeSkyboxNextConfig][i].skybox2Index][0][j], timeChangeBlend);
+
+                skyboxCtx->skyboxTopColor[j] = LERP(blend8[0], blend8[1], configBlend);
+
+                blend8[0] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index][1][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox2Index][1][j], timeChangeBlend);
+                blend8[1] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->changeSkyboxNextConfig][i].skybox1Index][1][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->changeSkyboxNextConfig][i].skybox2Index][1][j], timeChangeBlend);
+                skyboxCtx->skyboxBottomColor[j] = LERP(blend8[0], blend8[1], configBlend);
+                }
+            }
+
+        } else { // regular daytime
+            for (u8 j = 0; j < 3; j++) {
+                skyboxCtx->skyboxTopColor[j] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index][0][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox2Index][0][j], timeChangeBlend);
+                skyboxCtx->skyboxBottomColor[j] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index][1][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox2Index][1][j], timeChangeBlend);
             }
         }
 
@@ -749,30 +847,30 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
 
         if ((envCtx->skybox1Index != newSkybox1Index) && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE)) {
             envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE1_START;
-            size = gNormalSkyFiles[newSkybox1Index].file.vromEnd - gNormalSkyFiles[newSkybox1Index].file.vromStart;
+            /* size = gNormalSkyFiles[newSkybox1Index].file.vromEnd - gNormalSkyFiles[newSkybox1Index].file.vromStart;
 
             osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
             DMA_REQUEST_ASYNC(&envCtx->dmaRequest, skyboxCtx->staticSegments[0],
                               gNormalSkyFiles[newSkybox1Index].file.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                              "../z_kankyo.c", 1264);
+                              "../z_kankyo.c", 1264); */
             envCtx->skybox1Index = newSkybox1Index;
         }
 
         if ((envCtx->skybox2Index != newSkybox2Index) && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE)) {
             envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE2_START;
-            size = gNormalSkyFiles[newSkybox2Index].file.vromEnd - gNormalSkyFiles[newSkybox2Index].file.vromStart;
+            /* size = gNormalSkyFiles[newSkybox2Index].file.vromEnd - gNormalSkyFiles[newSkybox2Index].file.vromStart;
 
             osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
             DMA_REQUEST_ASYNC(&envCtx->dmaRequest, skyboxCtx->staticSegments[1],
                               gNormalSkyFiles[newSkybox2Index].file.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                              "../z_kankyo.c", 1281);
+                              "../z_kankyo.c", 1281); */
             envCtx->skybox2Index = newSkybox2Index;
         }
 
         if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_DONE) {
             envCtx->skyboxDmaState = SKYBOX_DMA_TLUT1_START;
 
-            if ((newSkybox1Index & 1) ^ ((newSkybox1Index & 4) >> 2)) {
+            /* if ((newSkybox1Index & 1) ^ ((newSkybox1Index & 4) >> 2)) {
                 size = gNormalSkyFiles[newSkybox1Index].palette.vromEnd -
                        gNormalSkyFiles[newSkybox1Index].palette.vromStart;
 
@@ -787,13 +885,13 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
                 DMA_REQUEST_ASYNC(&envCtx->dmaRequest, (u8*)skyboxCtx->palettes + size,
                                   gNormalSkyFiles[newSkybox1Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
                                   "../z_kankyo.c", 1320);
-            }
+            } */
         }
 
         if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_DONE) {
             envCtx->skyboxDmaState = SKYBOX_DMA_TLUT2_START;
 
-            if ((newSkybox2Index & 1) ^ ((newSkybox2Index & 4) >> 2)) {
+            /* if ((newSkybox2Index & 1) ^ ((newSkybox2Index & 4) >> 2)) {
                 size = gNormalSkyFiles[newSkybox2Index].palette.vromEnd -
                        gNormalSkyFiles[newSkybox2Index].palette.vromStart;
 
@@ -808,10 +906,10 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
                 DMA_REQUEST_ASYNC(&envCtx->dmaRequest, (u8*)skyboxCtx->palettes + size,
                                   gNormalSkyFiles[newSkybox2Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
                                   "../z_kankyo.c", 1355);
-            }
+            } */
         }
 
-        if ((envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_START) ||
+        /* if ((envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_START) ||
             (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_START)) {
             if (osRecvMesg(&envCtx->loadQueue, NULL, OS_MESG_NOBLOCK) == 0) {
                 envCtx->skyboxDmaState++;
@@ -820,7 +918,7 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
             if (osRecvMesg(&envCtx->loadQueue, NULL, OS_MESG_NOBLOCK) == 0) {
                 envCtx->skyboxDmaState = SKYBOX_DMA_INACTIVE;
             }
-        }
+        } */
 
         envCtx->skyboxBlend = skyboxBlend;
     }
@@ -945,6 +1043,7 @@ void Environment_Update(PlayState* play, EnvironmentContext* envCtx, LightContex
 
         Environment_UpdateRain(play);
         Environment_PlayTimeBasedSequence(play);
+        Environment_UpdateClouds(play);
 
         if (((void)0, gSaveContext.nextDayTime) >= 0xFF00 && ((void)0, gSaveContext.nextDayTime) != NEXT_TIME_NONE) {
             gSaveContext.nextDayTime -= 0x10;
@@ -1418,6 +1517,411 @@ void Environment_Update(PlayState* play, EnvironmentContext* envCtx, LightContex
             envCtx->dirLight2.params.dir.x = 1;
         }
     }
+}
+
+void Environment_SetupSkyboxStars(PlayState* play) {
+    f32 phi_f0;
+
+    if ((play->envCtx.changeSkyboxNextConfig == 0 || (play->envCtx.skyboxConfig == 0 && play->envCtx.changeSkyboxNextConfig == 0)) && (play->skyboxId == SKYBOX_NORMAL_SKY)) {
+        // rewrite this to start earlier and end later
+        if ((gSaveContext.save.dayTime >= CLOCK_TIME(20, 30)) || (gSaveContext.save.dayTime < CLOCK_TIME(3, 0))) {
+            phi_f0 = 1.0f;
+        } else if (gSaveContext.save.dayTime > CLOCK_TIME(18, 30)) {
+            phi_f0 = 1.0f - ((CLOCK_TIME(20, 30) - gSaveContext.save.dayTime) * (1.0f / (CLOCK_TIME(2, 0) + 1)));
+        } else if (gSaveContext.save.dayTime < CLOCK_TIME(4, 0)) {
+            phi_f0 = (CLOCK_TIME(4, 0) - gSaveContext.save.dayTime) * (1.0f / (CLOCK_TIME(1, 0) + 1));
+        } else {
+            phi_f0 = 0.0f;
+        }
+
+        /* if ((gSaveContext.save.dayTime >= CLOCK_TIME(19, 0)) || (gSaveContext.save.dayTime < CLOCK_TIME(3, 0))) {
+            if (sStarAlpha < 1.0f) {
+                Math_StepToF(&sStarAlpha, 1.0f, 0.1f);
+            }
+        } else {
+            if (sStarAlpha > 0.0f) {
+                Math_StepToF(&sStarAlpha, 0.0f, 0.1f);
+            }
+        } */
+
+        sStarAlpha = phi_f0;
+        sEnvSkyboxNumStars = gSkyboxNumStars;
+    } else {
+        sStarAlpha = 0.0f;
+        sEnvSkyboxNumStars = 0;
+    }
+
+    if ((sEnvSkyboxNumStars != 0) && (sStarAlpha != 0.0f)) {
+        OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+        sSkyboxStarsDList = POLY_OPA_DISP;
+
+        gSPNoOp(POLY_OPA_DISP++);
+
+        CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+    } else {
+        sSkyboxStarsDList = NULL;
+    }
+}
+
+void Environment_DrawSkyboxStar(Gfx** gfxP, f32 x, f32 y, s32 width, s32 height) {
+    Gfx* gfx = *gfxP;
+    u32 xl = x * 4.0f;
+    u32 yl = y * 4.0f;
+    u32 xd = width;
+    u32 yd = height;
+
+    gSPTextureRectangle(gfx++, xl, yl, xl + xd, yl + yd, 0, 0, 0, 0, 0);
+
+    *gfxP = gfx;
+}
+
+void Environment_DrawSkyboxStarsImpl(PlayState* play, Gfx** gfxP) {
+    static const Vec3s D_801DD880[] = {
+        { 0x0384, 0x2328, 0xD508 }, { 0x09C4, 0x2328, 0xDA1C }, { 0x0E74, 0x22D8, 0xDA1C }, { 0x1450, 0x2468, 0xD8F0 },
+        { 0x1C84, 0x28A0, 0xCBA8 }, { 0x1F40, 0x2134, 0xD8F0 }, { 0x1F40, 0x28A0, 0xDAE4 }, { 0xE4A8, 0x4A38, 0x4A38 },
+        { 0xD058, 0x4C2C, 0x3A98 }, { 0xD8F0, 0x36B0, 0x47E0 }, { 0xD954, 0x3264, 0x3E1C }, { 0xD8F0, 0x3070, 0x37DC },
+        { 0xD8F0, 0x1F40, 0x5208 }, { 0xD760, 0x1838, 0x27D8 }, { 0x0000, 0x4E20, 0x4A38 }, { 0x076C, 0x2328, 0xDCD8 },
+    };
+    static const Color_RGBA8_u32 D_801DD8E0[] = {
+        { 65, 164, 255, 255 },  { 131, 164, 230, 255 }, { 98, 205, 255, 255 }, { 82, 82, 255, 255 },
+        { 123, 164, 164, 255 }, { 98, 205, 255, 255 },  { 98, 164, 230, 255 }, { 255, 90, 0, 255 },
+    };
+    static const Color_RGBA8_u32 D_801DD900[] = {
+        { 64, 80, 112, 255 },   { 96, 96, 128, 255 },   { 128, 112, 144, 255 }, { 160, 128, 160, 255 },
+        { 192, 144, 168, 255 }, { 224, 160, 176, 255 }, { 224, 160, 176, 255 }, { 104, 104, 136, 255 },
+        { 136, 120, 152, 255 }, { 168, 136, 168, 255 }, { 200, 152, 184, 255 }, { 232, 168, 184, 255 },
+        { 224, 176, 184, 255 }, { 240, 192, 192, 255 }, { 232, 184, 192, 255 }, { 248, 200, 192, 255 },
+    };
+    Vec3f pos;
+    f32 temp;
+    f32 imgY;
+    f32 imgX;
+    Gfx* gfx;
+    s32 phi_v1;
+    s32 negateY;
+    f32 invScale;
+    f32 temp_f20;
+    Gfx* gfxTemp;
+    f32 scale;
+    s32 i;
+    u32 randInt;
+    u32 imgWidth;
+    f32* imgXPtr;
+    f32* imgYPtr;
+    Vec3f* posPtr;
+    s32 pad[2];
+    f32(*viewProjectionMtxF)[4];
+
+    gfx = *gfxP;
+
+    Matrix_MtxToMtxF(play->view.viewingPtr, &play->billboardMtxF);
+    Matrix_MtxToMtxF(&play->view.projection, &play->viewProjectionMtxF);
+    SkinMatrix_MtxFMtxFMult(&play->viewProjectionMtxF, &play->billboardMtxF, &play->viewProjectionMtxF);
+
+    phi_v1 = 0;
+
+    gDPPipeSync(gfx++);
+    gDPSetEnvColor(gfx++, 255, 255, 255, 255.0f * sStarAlpha);
+    gDPSetCombineLERP(gfx++, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0,
+                      PRIMITIVE, 0, ENVIRONMENT, 0);
+    gDPSetOtherMode(gfx++,
+                    G_AD_DISABLE | G_CD_DISABLE | G_CK_NONE | G_TC_FILT | G_TF_POINT | G_TT_NONE | G_TL_TILE |
+                        G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_NPRIMITIVE,
+                    G_AC_NONE | G_ZS_PRIM | G_RM_AA_XLU_LINE | G_RM_AA_XLU_LINE2);
+
+    randInt = ((u32)gSaveContext.save.info.playerData.playerName[0] << 0x18) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[1] << 0x14) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[2] << 0x10) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[3] << 0xC) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[4] << 8) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[5] << 4) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[6] << 0) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[7] >> 4) ^
+              ((u32)gSaveContext.save.info.playerData.playerName[7] << 0x1C);
+
+    for (i = 0; i < sEnvSkyboxNumStars; i++) {
+        if (i < 16) {
+            pos.x = play->view.eye.x + (s32)D_801DD880[i].x;
+            pos.y = play->view.eye.y + (s32)D_801DD880[i].y;
+            pos.z = play->view.eye.z + (s32)D_801DD880[i].z;
+            imgWidth = 8;
+        } else {
+            f32 temp_f22;
+            // f32 temp_f4;
+            f32 temp_f2;
+
+            temp_f20 = Rand_ZeroOne_Variable(&randInt);
+
+            Rand_Next_Variable(&randInt);
+
+            // Set random position
+            pos.y = play->view.eye.y + (SQ(temp_f20) * SQ(128.0f)) - 1000.0f;
+            pos.x = play->view.eye.x + (Math_SinS(randInt) * (1.2f - temp_f20) * SQ(128.0f));
+            pos.z = play->view.eye.z + (Math_CosS(randInt) * (1.2f - temp_f20) * SQ(128.0f));
+
+            temp_f2 = Rand_ZeroOne_Variable(&randInt);
+
+            // Set random width
+            imgWidth = (u32)((SQ(temp_f2) * 8.0f) + 2.0f);
+        }
+
+        if ((i < 15) || ((i == 15) && ((((void)0, gSaveContext.save.totalDays) % 7) == 0))) {
+            gDPSetColor(gfx++, G_SETPRIMCOLOR, D_801DD8E0[i % ARRAY_COUNTU(D_801DD8E0)].rgba);
+        } else if (((i & 0x3F) == 0) || (i == 16)) {
+            gDPSetColor(gfx++, G_SETPRIMCOLOR, D_801DD900[phi_v1 % ARRAY_COUNTU(D_801DD900)].rgba);
+            phi_v1++;
+        }
+
+        // posPtr = &pos;
+        // imgXPtr = &imgX;
+        // imgYPtr = &imgY;
+        viewProjectionMtxF = play->viewProjectionMtxF.mf;
+
+        if (imgWidth >= 2) {
+            // w component
+            scale = pos.x * play->viewProjectionMtxF.mf[0][3] + pos.y * play->viewProjectionMtxF.mf[1][3] +
+                    pos.z * play->viewProjectionMtxF.mf[2][3] + play->viewProjectionMtxF.mf[3][3];
+            if (scale >= 1.0f) {
+                invScale = 1.0f / scale;
+                // x component
+                imgX = (pos.x * viewProjectionMtxF[0][0] + pos.y * viewProjectionMtxF[1][0] +
+                        pos.z * viewProjectionMtxF[2][0] + viewProjectionMtxF[3][0]) *
+                       invScale;
+                // y component
+                imgY = (((pos.x * viewProjectionMtxF[0][1]) + (pos.y * viewProjectionMtxF[1][1]) +
+                         (pos.z * viewProjectionMtxF[2][1])) +
+                        viewProjectionMtxF[3][1]) *
+                       invScale;
+            }
+
+            if ((scale >= 1.0f) && (imgX > -1.0f) && (imgX < 1.0f) && (imgY > -1.0f) && (imgY < 1.0f)) {
+                imgX = (imgX * (SCREEN_WIDTH / 2)) + (SCREEN_WIDTH / 2);
+                imgY = (imgY * -(SCREEN_HEIGHT / 2)) + (SCREEN_HEIGHT / 2);
+
+                gfxTemp = gfx;
+                Environment_DrawSkyboxStar(&gfxTemp, imgX, imgY, imgWidth, 4);
+                gfx = gfxTemp;
+            }
+        }
+    }
+
+    gDPPipeSync(gfx++);
+    *gfxP = gfx;
+}
+
+void Environment_DrawSkyboxStars(PlayState* play) {
+    Gfx* gfx;
+    Gfx* gfxHead;
+
+    if (sSkyboxStarsDList != NULL) {
+        OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+        gfxHead = POLY_OPA_DISP;
+        gfx = Gfx_Open(gfxHead);
+
+        gSPDisplayList(sSkyboxStarsDList, gfx);
+
+        Environment_DrawSkyboxStarsImpl(play, &gfx);
+
+        gSPEndDisplayList(gfx++);
+
+        Gfx_Close(gfxHead, gfx);
+
+        POLY_OPA_DISP = gfx;
+        sSkyboxStarsDList = NULL;
+
+        CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+    }
+}
+
+void Environment_ResetCloud(PlayState* play, u8 i) {
+    play->envCtx.clouds[i].scale = Rand_ZeroOne();
+
+    if (i < 8) {
+        play->envCtx.clouds[i].scale = Rand_ZeroFloat(0.5f) + 0.1f;
+        play->envCtx.clouds[i].targetPitch = (u8)Rand_S16Offset(5, 20); // max 25
+    } else {
+        play->envCtx.clouds[i].scale = Rand_ZeroFloat(0.5f) + 0.5f;
+        play->envCtx.clouds[i].targetPitch = (u8)Rand_S16Offset(20, 50); // max 70
+    }
+
+    play->envCtx.clouds[i].rot.y = DEG_TO_RAD((((70 - play->envCtx.clouds[i].targetPitch) * 35) / 70)/*  + 5 */);
+
+    if (Rand_ZeroOne() < 0.5f) {
+        play->envCtx.clouds[i].rot.y *= -1;
+    }
+
+    play->envCtx.clouds[i].texId = (u8)Rand_S16Offset(0, 3); // 0-2
+}
+
+void Environment_InitClouds(PlayState* play) {
+    u8 i;
+
+    for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
+        play->envCtx.clouds[i].rot.x = 0;
+
+        if (i < sCloudDensity) {
+            play->envCtx.clouds[i].alpha = 200;
+        } else {
+            play->envCtx.clouds[i].alpha = 0;
+        }
+
+        Environment_ResetCloud(play, i);
+
+        play->envCtx.clouds[i].rot.y = DEG_TO_RAD(Rand_S16Offset(-180, 360));
+    }
+}
+
+void Environment_UpdateClouds(PlayState* play) {
+    u8 i;
+
+    for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
+        if (i < sCloudDensity) {
+            if (RAD_TO_DEG(play->envCtx.clouds[i].rot.y) >= 0) {
+                play->envCtx.clouds[i].rot.y += 0.0001f + (DEG_TO_RAD(play->envCtx.clouds[i].targetPitch) * 0.0005)/*  + (play->envCtx.windSpeed * 0.000005) */;
+            } else {
+                play->envCtx.clouds[i].rot.y -= 0.0001f + DEG_TO_RAD(play->envCtx.clouds[i].targetPitch * 0.0005)/*  + (play->envCtx.windSpeed * 0.000005) */;
+            }
+
+            play->envCtx.clouds[i].rot.z = sinf(RAD_TO_DEG(fabsf(play->envCtx.clouds[i].rot.y)) * (M_PI / 180)) * DEG_TO_RAD(play->envCtx.clouds[i].targetPitch)/*  + DEG_TO_RAD(5) */;
+
+            // reset clouds
+            if (RAD_TO_DEG(fabsf(play->envCtx.clouds[i].rot.y)) >= (180 - (((70 - play->envCtx.clouds[i].targetPitch) * 35) / 70))) {
+                play->envCtx.clouds[i].alpha = CLAMP_MIN(play->envCtx.clouds[i].alpha - 2, 0);
+                if (play->envCtx.clouds[i].alpha <= 0) {
+                    Environment_ResetCloud(play, i);
+                }
+            } else if (play->envCtx.clouds[i].alpha < 200) {
+                play->envCtx.clouds[i].alpha = CLAMP_MAX(play->envCtx.clouds[i].alpha + 2, 200);
+            }
+        } else if (play->envCtx.clouds[i].alpha > 0) {
+            play->envCtx.clouds[i].alpha = CLAMP_MIN(play->envCtx.clouds[i].alpha - 5, 0);
+        }
+    }
+}
+
+// storm cloud
+void Environment_DrawCloudStorm(PlayState* play) {
+    static u8 stormAlpha;
+    u32 filterA = 0;
+
+    // you can use this for regular fog if you want
+    if (play->lightCtx.fogNear < 980) {
+        filterA = (980 - play->lightCtx.fogNear) * (255.0f / 50);
+        if (filterA > 255) {
+            filterA = 255;
+        }
+    }
+
+    if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
+        stormAlpha = CLAMP_MAX(stormAlpha + 5, 180);
+        sCloudDensity = 32;
+    } else {
+        sCloudDensity = 16;
+        stormAlpha = CLAMP_MIN(stormAlpha - 5, 0);
+    }
+
+    if (stormAlpha <= 0) {
+        return;
+    }
+
+    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+    POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1], play->lightCtx.fogColor[2], filterA, play->lightCtx.fogNear, 1000);
+
+    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], stormAlpha);
+    gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
+
+    Matrix_Translate(play->view.eye.x, play->view.eye.y + 100, play->view.eye.z, MTXMODE_NEW);
+    Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
+    Matrix_RotateY(play->skyboxCtx.rot.y, MTXMODE_APPLY);
+
+    gSPMatrix(POLY_XLU_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_cheap_proc.c", 216),
+              G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    gSPDisplayList(POLY_XLU_DISP++, skybox_storm_cloud);
+
+    POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
+
+    CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+}
+
+// cloud ring
+void Environment_DrawCloudHorizon(PlayState* play) {
+    static u8 fogIntensity;
+
+    // play->envCtx.dirLight1.params.dir.color[0] etc is white for Hyrule Field adult fog state, causing it to look weird
+    if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
+        if (play->lightCtx.fogNear < 980) {
+            fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
+        } else {
+            fogIntensity = CLAMP_MAX(fogIntensity + 35, 200);
+        }
+    } else {
+        if (play->lightCtx.fogNear < 980) {
+            fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
+        } else {
+            fogIntensity = CLAMP_MIN(fogIntensity - 35, 0);
+        }
+    }
+    
+    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+    POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1],
+                               play->lightCtx.fogColor[2], fogIntensity, play->lightCtx.fogNear, 1000);
+
+    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], 150);
+    gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
+
+    Matrix_Translate(play->view.eye.x, play->view.eye.y + 50, play->view.eye.z, MTXMODE_NEW);
+    Matrix_Scale(1.0f, 1.5f, 1.0f, MTXMODE_APPLY);
+    Matrix_RotateY(play->skyboxCtx.rot.y, MTXMODE_APPLY);
+
+    gSPMatrix(POLY_XLU_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_cheap_proc.c", 216),
+              G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    gSPDisplayList(POLY_XLU_DISP++, skybox_cloud_horizon);
+
+    CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+}
+
+// single clouds
+void Environment_DrawClouds(PlayState* play) {
+    static void* cloudTex[] = {skybox_cloud_01_tex, skybox_cloud_02_tex, skybox_cloud_03_tex};
+    u8 i;
+    f32 windRot;
+
+    windRot = Math_Atan2F(play->envCtx.windDirection.y, play->envCtx.windDirection.x) - DEG_TO_RAD(90);
+
+    OPEN_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 214);
+
+    gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
+
+    for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
+        f32 scale;
+
+        gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], play->envCtx.clouds[i].alpha);
+
+        Matrix_Translate(play->view.eye.x, play->view.eye.y, play->view.eye.z, MTXMODE_NEW);
+
+        // yaw
+        Matrix_RotateY(play->envCtx.clouds[i].rot.y + windRot, MTXMODE_APPLY);
+
+        // pitch
+        Matrix_RotateZ(play->envCtx.clouds[i].rot.z, MTXMODE_APPLY);
+        Matrix_Translate(6000.0f, 0, 0, MTXMODE_APPLY);
+
+        scale = play->envCtx.clouds[i].scale + ((f32)RAD_TO_DEG(play->envCtx.clouds[i].rot.z) * 0.03f);
+        Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+
+        gSPMatrix(POLY_XLU_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_cheap_proc.c", 216),
+                G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+        gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(cloudTex[play->envCtx.clouds[i].texId]));
+        gSPDisplayList(POLY_XLU_DISP++, skybox_cloud);
+    }
+
+    POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
+
+    CLOSE_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 219);
 }
 
 void Environment_DrawSunAndMoon(PlayState* play) {
@@ -1909,27 +2413,29 @@ void Environment_DrawLightningFlash(PlayState* play, u8 red, u8 green, u8 blue, 
 }
 
 void Environment_UpdateLightningStrike(PlayState* play) {
-    if (play->envCtx.lightningState != LIGHTNING_OFF) {
+    // if (play->envCtx.lightningState != LIGHTNING_OFF) {
         switch (gLightningStrike.state) {
             case LIGHTNING_STRIKE_WAIT:
-                // every frame theres a 10% chance of the timer advancing 50 units
-                if (Rand_ZeroOne() < 0.1f) {
-                    gLightningStrike.delayTimer += 50.0f;
-                }
+                if (play->envCtx.lightningState != LIGHTNING_OFF) {
+                    // every frame theres a 10% chance of the timer advancing 50 units
+                    if (Rand_ZeroOne() < 0.1f) {
+                        gLightningStrike.delayTimer += 50.0f;
+                    }
 
-                gLightningStrike.delayTimer += Rand_ZeroOne();
+                    gLightningStrike.delayTimer += Rand_ZeroOne();
 
-                if (gLightningStrike.delayTimer > 500.0f) {
-                    gLightningStrike.flashRed = 200;
-                    gLightningStrike.flashGreen = 200;
-                    gLightningStrike.flashBlue = 255;
-                    gLightningStrike.flashAlphaTarget = 200;
+                    if (gLightningStrike.delayTimer > 500.0f) {
+                        gLightningStrike.flashRed = 200;
+                        gLightningStrike.flashGreen = 200;
+                        gLightningStrike.flashBlue = 255;
+                        gLightningStrike.flashAlphaTarget = 200;
 
-                    gLightningStrike.delayTimer = 0.0f;
-                    Environment_AddLightningBolts(play,
-                                                  (u8)(Rand_ZeroOne() * (ARRAY_COUNT(sLightningBolts) - 0.1f)) + 1);
-                    sLightningFlashAlpha = 0;
-                    gLightningStrike.state++;
+                        gLightningStrike.delayTimer = 0.0f;
+                        Environment_AddLightningBolts(play,
+                                                      (u8)(Rand_ZeroOne() * (ARRAY_COUNT(sLightningBolts) - 0.1f)) + 1);
+                        sLightningFlashAlpha = 0;
+                        gLightningStrike.state++;
+                    }
                 }
                 break;
             case LIGHTNING_STRIKE_START:
@@ -1974,7 +2480,7 @@ void Environment_UpdateLightningStrike(PlayState* play) {
                 }
                 break;
         }
-    }
+    // }
 
     if (gLightningStrike.state != LIGHTNING_STRIKE_WAIT) {
         Environment_DrawLightningFlash(play, gLightningStrike.flashRed, gLightningStrike.flashGreen,
