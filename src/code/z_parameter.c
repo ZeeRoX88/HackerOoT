@@ -3861,6 +3861,7 @@ void Interface_Draw(PlayState* play) {
 
         // A Button
         Gfx_SetupDL_42Overlay(play->state.gfxCtx);
+        gDPSetAlphaCompare(OVERLAY_DISP++, G_AC_THRESHOLD);
         func_8008A8B8(play, R_A_BTN_Y, R_A_BTN_Y + 45, WIDE_INCR(R_A_BTN_X, WIDE_BTNA_SHIFT),
                       WIDE_INCR((R_A_BTN_X + 45), WIDE_BTNA_SHIFT));
         gSPClearGeometryMode(OVERLAY_DISP++, G_CULL_BOTH);

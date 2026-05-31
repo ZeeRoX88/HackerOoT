@@ -453,6 +453,7 @@ void EnWood02_Draw(Actor* thisx, PlayState* play) {
     }
 
     Gfx_SetupDL_25Xlu(gfxCtx);
+    gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
 
     if ((this->actor.params == WOOD_LEAF_GREEN) || (this->actor.params == WOOD_LEAF_YELLOW)) {
         Gfx_SetupDL_25Opa(gfxCtx);

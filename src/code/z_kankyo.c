@@ -1430,7 +1430,7 @@ void Environment_DrawSunAndMoon(PlayState* play) {
                            0, 0, COMBINED),
         gsDPSetOtherMode(G_AD_NOTPATTERN | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE | G_TL_TILE |
                              G_TD_CLAMP | G_TP_PERSP | G_CYC_2CYCLE | G_PM_NPRIMITIVE,
-                         G_AC_NONE | G_ZS_PIXEL | G_RM_FOG_PRIM_A | G_RM_XLU_SURF2),
+                         G_AC_THRESHOLD | G_ZS_PIXEL | G_RM_FOG_PRIM_A | G_RM_XLU_SURF2),
         gsDPLoadTextureBlock(gMoonTex, G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
                              G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD),
         gsSPVertex(&gMoonVtx[0], 4, 0),

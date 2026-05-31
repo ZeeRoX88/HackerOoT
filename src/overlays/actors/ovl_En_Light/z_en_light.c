@@ -172,6 +172,7 @@ void EnLight_Draw(Actor* thisx, PlayState* play) {
     OPEN_DISPS(play->state.gfxCtx, "../z_en_light.c", 441);
 
     Gfx_SetupDL_25Xlu(play->state.gfxCtx);
+    gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
 
     if (this->actor.params >= 0) {
         gSPSegment(POLY_XLU_DISP++, 0x08,

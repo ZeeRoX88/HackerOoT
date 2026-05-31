@@ -75,6 +75,7 @@ void EffectSsBlast_Draw(PlayState* play, u32 index, EffectSs* this) {
     scale = this->rScale * (1 / 400.0f);
 
     Gfx_SetupDL_25Xlu(play->state.gfxCtx);
+    gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
     gDPSetEnvColor(POLY_XLU_DISP++, this->rOuterColorR, this->rOuterColorG, this->rOuterColorB, this->rOuterColorA);
     func_800BFCB8(play, &mf, &this->pos);
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->rInnerColorR, this->rInnerColorG, this->rInnerColorB,

@@ -147,6 +147,7 @@ void EffectSsBomb2_DrawLayered(PlayState* play, u32 index, EffectSs* this) {
 
         if (mtx2 != NULL) {
             Gfx_SetupDL_60NoCDXlu(gfxCtx);
+            gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
             gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->rPrimColorR, this->rPrimColorG, this->rPrimColorB,
                             this->rPrimColorA);
             gDPSetEnvColor(POLY_XLU_DISP++, this->rEnvColorR, this->rEnvColorG, this->rEnvColorB, 0);
