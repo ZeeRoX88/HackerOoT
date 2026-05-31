@@ -12,7 +12,7 @@
  * Note: you can define this with `CPP_DEFINES=-DENABLE_F3DEX3=0 make -j$(nproc)`
 */
 #ifndef ENABLE_F3DEX3
-#define ENABLE_F3DEX3 true
+#define ENABLE_F3DEX3 false
 #endif
 // Remove usually-unnecessary syncs from texture loading commands. Only matters
 // for vanilla display lists--new ones exported from fast64 already have the
@@ -59,7 +59,7 @@
  * Uses a more expensive but substantially better morphing algorithm.
  * Useful to avoid custom skeletons with complex animations "flipping out" when animations are morphed.
 */
-#define IMPROVED_ANIMATION_MORPHING true
+#define IMPROVED_ANIMATION_MORPHING false
 
 /**
  * Widescreen mode
