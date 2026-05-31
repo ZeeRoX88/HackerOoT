@@ -886,6 +886,7 @@ void EnFz_DrawEffects(EnFz* this, PlayState* play) {
 
             if (materialFlag == 0) {
                 gSPDisplayList(POLY_XLU_DISP++, SEGMENTED_TO_VIRTUAL(gFreezardSteamStartDL));
+                gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
                 materialFlag++;
             }
 

@@ -105,6 +105,7 @@ void EffectSsHitMark_Draw(PlayState* play, u32 index, EffectSs* this) {
         gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(sTextures[(this->rType * 8) + (this->rTexIndex)]));
         IF_F3DEX3_DONT_SKIP_TEX_HERE(POLY_XLU_DISP++, (this->rType * 8) + (this->rTexIndex));
         Gfx_SetupDL_61Xlu(gfxCtx);
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->rPrimColorR, this->rPrimColorG, this->rPrimColorB, 255);
         gDPSetEnvColor(POLY_XLU_DISP++, this->rEnvColorR, this->rEnvColorG, this->rEnvColorB, 0);
         gSPDisplayList(POLY_XLU_DISP++, this->gfx);

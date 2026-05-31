@@ -82,6 +82,7 @@ void EffectSs_DrawGEffect(PlayState* play, EffectSs* this, void* texture) {
         gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(texture));
         IF_F3DEX3_DONT_SKIP_TEX_HERE(POLY_XLU_DISP++, texture);
         Gfx_SetupDL_61Xlu(gfxCtx);
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->rgPrimColorR, this->rgPrimColorG, this->rgPrimColorB,
                         this->rgPrimColorA);
         gDPSetEnvColor(POLY_XLU_DISP++, this->rgEnvColorR, this->rgEnvColorG, this->rgEnvColorB, this->rgEnvColorA);

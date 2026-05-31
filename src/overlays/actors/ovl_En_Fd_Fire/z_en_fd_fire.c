@@ -274,6 +274,7 @@ void EnFdFire_Draw(Actor* thisx, PlayState* play) {
     Matrix_Scale(1.0f, sp84, 1.0f / sp84, MTXMODE_APPLY);
     MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx, "../z_en_fd_fire.c", 623);
     Gfx_SetupDL_25Xlu(play->state.gfxCtx);
+    gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
     gSPSegment(POLY_XLU_DISP++, 0x8,
                Gfx_TwoTexScroll(play->state.gfxCtx, G_TX_RENDERTILE, 0, 0, 0x20, 0x40, 1, 0,
                                 play->state.frames * this->tile2Y, 0x20, 0x80));
