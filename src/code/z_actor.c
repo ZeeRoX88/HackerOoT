@@ -85,6 +85,7 @@ void ActorShadow_Draw(Actor* actor, Lights* lights, PlayState* play, Gfx* dlist,
         OPEN_DISPS(play->state.gfxCtx, "../z_actor.c", 1553);
 
         POLY_OPA_DISP = Gfx_SetupDL(POLY_OPA_DISP, SETUPDL_44);
+        gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_THRESHOLD);
 
         gDPSetCombineLERP(POLY_OPA_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED, 0, 0, 0,
                           COMBINED);
@@ -193,6 +194,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         OPEN_DISPS(play->state.gfxCtx, "../z_actor.c", 1741);
 
         POLY_OPA_DISP = Gfx_SetupDL(POLY_OPA_DISP, SETUPDL_44);
+        gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_THRESHOLD);
 
         // feetFloorFlag is temporarily a bitfield where the bits are set if the foot is on ground
         // feetFloorFlag & 2 is left foot, feetFloorFlag & 1 is right foot
