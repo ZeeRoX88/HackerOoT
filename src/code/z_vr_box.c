@@ -500,6 +500,9 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
             size = (uintptr_t)_new_skybox_staticSegmentRomEnd - (uintptr_t)_new_skybox_staticSegmentRomStart;
             skyboxCtx->skyboxStaticSegment = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1226);
 
+            ASSERT(skyboxCtx->skyboxStaticSegment != NULL, "skyboxCtx->skyboxStaticSegment != NULL", "../z_vr_box.c",
+                   1055);
+
             DMA_REQUEST_SYNC(skyboxCtx->skyboxStaticSegment, (uintptr_t)_new_skybox_staticSegmentRomStart, size,
                              "../z_vr_box.c", 1228);
 

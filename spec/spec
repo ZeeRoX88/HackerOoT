@@ -5107,7 +5107,7 @@ beginseg
     compress
     romalign 0x1000
     include "$(BUILD_DIR)/assets/textures/new_skybox_static/new_skybox_static.o"
-    number 1
+    number 7
 endseg
 
 beginseg

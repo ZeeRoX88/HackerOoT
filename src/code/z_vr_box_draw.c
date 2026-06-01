@@ -187,13 +187,15 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     
     OPEN_DISPS(gfxCtx, "../z_cheap_proc.c", 214);
 
+    gSPSegment(POLY_OPA_DISP++, 0x7, skyboxCtx->skyboxStaticSegment);
+
     sSkyboxDrawMatrix = Graph_Alloc(gfxCtx, sizeof(Mtx));
     Matrix_Translate(x, y, z, MTXMODE_NEW);
     Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
     MATRIX_TO_MTX(sSkyboxDrawMatrix, "../z_vr_box_draw.c", 76);
     gSPMatrix(POLY_OPA_DISP++, sSkyboxDrawMatrix, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-    gSPDisplayList(POLY_OPA_DISP++, SEGMENTED_TO_VIRTUAL(mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque));
+    gSPDisplayList(POLY_OPA_DISP++, mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque);
 
     gSPVertex(POLY_OPA_DISP++, vtx + 0, 32, 0);
     gSP2Triangles(POLY_OPA_DISP++, 0, 1, 2, 0, 0, 3, 1, 0);

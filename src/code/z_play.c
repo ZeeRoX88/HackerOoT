@@ -1547,6 +1547,7 @@ void Play_Draw(PlayState* this) {
                     }
                     Skybox_DrawNew(&this->skyboxCtx, gfxCtx, &this->lightCtx, this->skyboxId, this->envCtx.skyboxBlend,
                                 this->view.eye.x, this->view.eye.y, this->view.eye.z);
+                    gSPSegment(POLY_XLU_DISP++, 0x7, this->skyboxCtx.skyboxStaticSegment);
                     Environment_DrawCloudStorm(this);
                     Environment_DrawCloudHorizon(this);
                     Environment_DrawClouds(this);
