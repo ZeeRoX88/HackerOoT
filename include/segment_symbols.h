@@ -176,6 +176,9 @@ DECLARE_ROM_SEGMENT(vr_TTVR_static)
 DECLARE_ROM_SEGMENT(vr_TTVR_pal_static)
 DECLARE_ROM_SEGMENT(vr_FCVR_static)
 DECLARE_ROM_SEGMENT(vr_FCVR_pal_static)
+
+DECLARE_ROM_SEGMENT(new_skybox_static)
+
 DECLARE_ROM_SEGMENT(elf_message_field)
 DECLARE_ROM_SEGMENT(elf_message_ydan)
 

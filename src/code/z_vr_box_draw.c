@@ -3,7 +3,8 @@
 #include "sys_matrix.h"
 #include "light.h"
 #include "skybox.h"
-#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
+#include "assets/textures/new_skybox_static/new_skybox_static.h"
+#include "segmented_address.h"
 
 Mtx* sSkyboxDrawMatrix;
 
@@ -192,7 +193,7 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     MATRIX_TO_MTX(sSkyboxDrawMatrix, "../z_vr_box_draw.c", 76);
     gSPMatrix(POLY_OPA_DISP++, sSkyboxDrawMatrix, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-    gSPDisplayList(POLY_OPA_DISP++, mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque);
+    gSPDisplayList(POLY_OPA_DISP++, SEGMENTED_TO_VIRTUAL(mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque));
 
     gSPVertex(POLY_OPA_DISP++, vtx + 0, 32, 0);
     gSP2Triangles(POLY_OPA_DISP++, 0, 1, 2, 0, 0, 3, 1, 0);

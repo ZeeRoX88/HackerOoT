@@ -58,6 +58,7 @@ typedef struct SkyboxContext {
     /* 0x144 */ Vec3f rot;
                 u8 skyboxTopColor[3];
                 u8 skyboxBottomColor[3];
+                u8* skyboxStaticSegment;
 } SkyboxContext; // size = 0x160
 
 typedef struct SkyboxFile {

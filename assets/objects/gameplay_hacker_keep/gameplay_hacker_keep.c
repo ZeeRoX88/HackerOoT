@@ -3,5 +3,3 @@
 #if MM_BOTTLE_MODEL
 #include "assets/objects/gameplay_hacker_keep/bottle.c"
 #endif
-
-#include "assets/objects/gameplay_hacker_keep/new_skybox.c"

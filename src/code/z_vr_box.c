@@ -496,6 +496,13 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
                 }
             }
 
+            //
+            size = (uintptr_t)_new_skybox_staticSegmentRomEnd - (uintptr_t)_new_skybox_staticSegmentRomStart;
+            skyboxCtx->skyboxStaticSegment = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1226);
+
+            DMA_REQUEST_SYNC(skyboxCtx->skyboxStaticSegment, (uintptr_t)_new_skybox_staticSegmentRomStart, size,
+                             "../z_vr_box.c", 1228);
+
             /* size = gNormalSkyFiles[skybox1Index].file.vromEnd - gNormalSkyFiles[skybox1Index].file.vromStart;
             skyboxCtx->staticSegments[0] = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1054);
             ASSERT(skyboxCtx->staticSegments[0] != NULL, "vr_box->vr_box_staticSegment[0] != NULL", "../z_vr_box.c",
@@ -560,6 +567,13 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
         case SKYBOX_OVERCAST_SUNSET:
             play->envCtx.skybox1Index = 6; // cloudy sunset
             play->envCtx.skybox2Index = 6; // cloudy sunset
+            //
+            size = (uintptr_t)_new_skybox_staticSegmentRomEnd - (uintptr_t)_new_skybox_staticSegmentRomStart;
+            skyboxCtx->skyboxStaticSegment = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1226);
+
+            DMA_REQUEST_SYNC(skyboxCtx->skyboxStaticSegment, (uintptr_t)_new_skybox_staticSegmentRomStart, size,
+                             "../z_vr_box.c", 1228);
+            
             /* size = (uintptr_t)_vr_cloud2_staticSegmentRomEnd - (uintptr_t)_vr_cloud2_staticSegmentRomStart;
             skyboxCtx->staticSegments[0] = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1155);
             ASSERT(skyboxCtx->staticSegments[0] != NULL, "vr_box->vr_box_staticSegment[0] != NULL", "../z_vr_box.c",
@@ -609,6 +623,13 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
         case SKYBOX_CUTSCENE_MAP:
             play->envCtx.skybox1Index = 8; // cloudy sunset
             play->envCtx.skybox2Index = 8; // cloudy sunset
+
+            //
+            size = (uintptr_t)_new_skybox_staticSegmentRomEnd - (uintptr_t)_new_skybox_staticSegmentRomStart;
+            skyboxCtx->skyboxStaticSegment = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1226);
+
+            DMA_REQUEST_SYNC(skyboxCtx->skyboxStaticSegment, (uintptr_t)_new_skybox_staticSegmentRomStart, size,
+                             "../z_vr_box.c", 1228);
             /* size = (uintptr_t)_vr_holy0_staticSegmentRomEnd - (uintptr_t)_vr_holy0_staticSegmentRomStart;
             skyboxCtx->staticSegments[0] = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1196);
             ASSERT(skyboxCtx->staticSegments[0] != NULL, "vr_box->vr_box_staticSegment[0] != NULL", "../z_vr_box.c",

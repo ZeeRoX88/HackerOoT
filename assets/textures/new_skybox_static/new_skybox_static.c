@@ -1,24 +1,25 @@
 #include "ultra64.h"
 #include "gfx.h"
+#include "new_skybox_static.h"
 
 u64 skybox_cloud_01_tex[] = {
-#include "assets/objects/gameplay_hacker_keep/cloud_new_01.ia8.inc.c"
+#include "assets/textures/new_skybox_static/cloud_new_01.ia8.inc.c"
 };
 
 u64 skybox_cloud_02_tex[] = {
-#include "assets/objects/gameplay_hacker_keep/cloud_new_02.ia8.inc.c"
+#include "assets/textures/new_skybox_static/cloud_new_02.ia8.inc.c"
 };
 
 u64 skybox_cloud_03_tex[] = {
-#include "assets/objects/gameplay_hacker_keep/cloud_new_03.ia8.inc.c"
+#include "assets/textures/new_skybox_static/cloud_new_03.ia8.inc.c"
 };
 
 u64 skybox_cloud_storm_tex[] = {
-#include "assets/objects/gameplay_hacker_keep/cloud_storm.ia8.inc.c"
+#include "assets/textures/new_skybox_static/cloud_storm.ia8.inc.c"
 };
 
 u64 skybox_cloud_horizon_tex[] = {
-#include "assets/objects/gameplay_hacker_keep/cloud_horizon.ia8.inc.c"
+#include "assets/textures/new_skybox_static/cloud_horizon.ia8.inc.c"
 };
 
 Vtx skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_vtx_cull[8] = {
@@ -149,7 +150,7 @@ Gfx skybox_cloud[] = {
 	gsSPEndDisplayList(),
 };
 
-Vtx skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_vtx_cull[8] = {
+/* Vtx skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_vtx_cull[8] = {
 	{{ {-100, -35, -100}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {-100, -35, 100}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {-100, 35, 100}, 0, {0, 0}, {0, 0, 0, 0} }},
@@ -158,46 +159,6 @@ Vtx skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_vtx_cull[8] = {
 	{{ {100, -35, 100}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {100, 35, 100}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {100, 35, -100}, 0, {0, 0}, {0, 0, 0, 0} }},
-};
-
-Vtx skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_vtx_0[37] = {
-	{{ {0, 0, -100}, 0, {1008, 240}, {180, 214, 255, 255} }},
-	{{ {71, 35, -71}, 0, {880, -16}, {57, 73, 192, 255} }},
-	{{ {0, 35, -100}, 0, {1008, -16}, {57, 73, 192, 255} }},
-	{{ {71, 0, -71}, 0, {880, 240}, {180, 214, 255, 255} }},
-	{{ {0, -35, -100}, 0, {1008, 496}, {57, 73, 192, 255} }},
-	{{ {71, -35, -71}, 0, {880, 496}, {57, 73, 192, 255} }},
-	{{ {100, 0, 0}, 0, {752, 240}, {180, 214, 255, 255} }},
-	{{ {100, -35, 0}, 0, {752, 496}, {57, 73, 192, 255} }},
-	{{ {71, 0, 71}, 0, {624, 240}, {180, 214, 255, 255} }},
-	{{ {71, -35, 71}, 0, {624, 496}, {57, 73, 192, 255} }},
-	{{ {0, 0, 100}, 0, {496, 240}, {180, 214, 255, 255} }},
-	{{ {0, -35, 100}, 0, {496, 496}, {57, 73, 192, 255} }},
-	{{ {-71, 0, 71}, 0, {368, 240}, {180, 214, 255, 255} }},
-	{{ {-71, -35, 71}, 0, {368, 496}, {57, 73, 192, 255} }},
-	{{ {-100, 0, 0}, 0, {240, 240}, {180, 214, 255, 255} }},
-	{{ {-100, -35, 0}, 0, {240, 496}, {57, 73, 192, 255} }},
-	{{ {-71, 0, -71}, 0, {112, 240}, {180, 214, 255, 255} }},
-	{{ {-71, -35, -71}, 0, {112, 496}, {57, 73, 192, 255} }},
-	{{ {0, 0, -100}, 0, {-16, 240}, {180, 214, 255, 255} }},
-	{{ {0, -35, -100}, 0, {-16, 496}, {57, 73, 192, 255} }},
-	{{ {0, 35, -100}, 0, {-16, -16}, {57, 73, 192, 255} }},
-	{{ {-71, 35, -71}, 0, {112, -16}, {57, 73, 192, 255} }},
-	{{ {-100, 35, 0}, 0, {240, -16}, {57, 73, 192, 255} }},
-	{{ {-71, 35, 71}, 0, {368, -16}, {57, 73, 192, 255} }},
-	{{ {0, 35, 100}, 0, {496, -16}, {57, 73, 192, 255} }},
-	{{ {71, 35, 71}, 0, {624, -16}, {57, 73, 192, 255} }},
-	{{ {100, 35, 0}, 0, {752, -16}, {57, 73, 192, 255} }},
-	{{ {0, 35, -100}, 0, {240, 506}, {57, 73, 192, 255} }},
-	{{ {71, 35, -71}, 0, {414, 578}, {57, 73, 192, 255} }},
-	{{ {100, 35, 0}, 0, {486, 752}, {57, 73, 192, 255} }},
-	{{ {0, 35, 100}, 0, {240, 998}, {57, 73, 192, 255} }},
-	{{ {71, 35, 71}, 0, {414, 926}, {57, 73, 192, 255} }},
-	{{ {0, 35, 100}, 0, {240, 998}, {57, 73, 192, 255} }},
-	{{ {-100, 35, 0}, 0, {-6, 752}, {57, 73, 192, 255} }},
-	{{ {0, 35, -100}, 0, {240, 506}, {57, 73, 192, 255} }},
-	{{ {-71, 35, 71}, 0, {66, 926}, {57, 73, 192, 255} }},
-	{{ {-71, 35, -71}, 0, {66, 578}, {57, 73, 192, 255} }},
 };
 
 Gfx skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_tri_0[] = {
@@ -224,7 +185,7 @@ Gfx skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_tri_0[] = {
 	gsSP2Triangles(0, 1, 2, 0, 0, 3, 1, 0),
 	gsSP1Triangle(1, 4, 2, 0),
 	gsSPEndDisplayList(),
-};
+}; */
 
 Gfx mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque[] = {
 	gsSPLoadGeometryMode(G_SHADE | G_CULL_BACK | G_FOG | G_SHADING_SMOOTH),
@@ -237,7 +198,7 @@ Gfx mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx skybox_cylinder_b[] = {
+/* Gfx skybox_cylinder_b[] = {
 	gsSPClearGeometryMode(G_LIGHTING),
 	gsSPVertex(skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_vtx_cull + 0, 8, 0),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -245,7 +206,7 @@ Gfx skybox_cylinder_b[] = {
 	gsSPDisplayList(mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque),
 	gsSPDisplayList(skybox_cylinder_b_skybox_cylinder_b_mesh_layer_Opaque_tri_0),
 	gsSPEndDisplayList(),
-};
+}; */
 
 Vtx skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_vtx_cull[8] = {
 	{{ {-1000, 0, -1000}, 0, {0, 0}, {0, 0, 0, 0} }},
@@ -296,3 +257,4 @@ Gfx skybox_storm_cloud[] = {
 	gsSPDisplayList(skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_tri_0),
 	gsSPEndDisplayList(),
 };
+

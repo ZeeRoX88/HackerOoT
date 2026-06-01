@@ -5103,6 +5103,14 @@ beginseg
 endseg
 
 beginseg
+    name "new_skybox_static"
+    compress
+    romalign 0x1000
+    include "$(BUILD_DIR)/assets/textures/new_skybox_static/new_skybox_static.o"
+    number 1
+endseg
+
+beginseg
     name "elf_message_field"
     compress
     romalign 0x1000

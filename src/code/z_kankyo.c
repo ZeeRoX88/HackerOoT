@@ -39,6 +39,8 @@
 #include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 #include "assets/objects/gameplay_field_keep/gameplay_field_keep.h"
 
+#include "assets/textures/new_skybox_static/new_skybox_static.h"
+
 typedef enum LightningBoltState {
     /* 0x00 */ LIGHTNING_BOLT_START,
     /* 0x01 */ LIGHTNING_BOLT_WAIT,
