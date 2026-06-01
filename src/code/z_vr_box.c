@@ -1052,7 +1052,7 @@ void Skybox_Init(GameState* state, SkyboxContext* skyboxCtx, s16 skyboxId) {
             ASSERT(skyboxCtx->roomVtx != NULL, "vr_box->roomVtx != NULL", "../z_vr_box.c", 1640);
 
             Skybox_Calculate256(skyboxCtx, skyboxId);
-        } else {
+        } /* else {
             skyboxCtx->dListBuf = GAME_STATE_ALLOC(state, 12 * 150 * sizeof(Gfx), "../z_vr_box.c", 1643);
             ASSERT(skyboxCtx->dListBuf != NULL, "vr_box->dpList != NULL", "../z_vr_box.c", 1644);
 
@@ -1060,7 +1060,7 @@ void Skybox_Init(GameState* state, SkyboxContext* skyboxCtx, s16 skyboxId) {
             ASSERT(skyboxCtx->roomVtx != NULL, "vr_box->roomVtx != NULL", "../z_vr_box.c", 1649);
             // compute all 6 faces, may be drawn black or with a texture (see Skybox_Draw)
             Skybox_Calculate128(skyboxCtx, 6);
-        }
+        } */
         PRINTF_RST();
     }
 }

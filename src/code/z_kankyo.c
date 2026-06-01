@@ -817,7 +817,6 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
             u8 blend8[2];
             configBlend = ((f32)envCtx->changeDuration - envCtx->changeSkyboxTimer) / (f32)envCtx->changeDuration;
 
-            // the i loop is missing here
             if (envCtx->skyboxConfig != envCtx->changeSkyboxNextConfig) {
                 for (u8 j = 0; j < 3; j++) {
                 blend8[0] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index][0][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox2Index][0][j], timeChangeBlend);
@@ -830,7 +829,6 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
                 skyboxCtx->skyboxBottomColor[j] = LERP(blend8[0], blend8[1], configBlend);
                 }
             }
-
         } else { // regular daytime
             for (u8 j = 0; j < 3; j++) {
                 skyboxCtx->skyboxTopColor[j] = LERP(skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox1Index][0][j], skyboxColors[gTimeBasedSkyboxConfigs[envCtx->skyboxConfig][i].skybox2Index][0][j], timeChangeBlend);

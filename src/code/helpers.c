@@ -110,7 +110,7 @@ void Helpers_DrawSkybox(GameState* gameState, View* view, EnvironmentContext* en
     sSkyboxAngle += angleIncrement;
 
     Helpers_SetView(view, eyeX, eyeY, eyeZ);
-    Skybox_Draw(skyboxCtx, gameState->gfxCtx, NULL, skyboxId, envCtx->skyboxBlend, view->eye.x, view->eye.y,
+    Skybox_DrawNew(skyboxCtx, gameState->gfxCtx, NULL, skyboxId, envCtx->skyboxBlend, view->eye.x, view->eye.y,
                 view->eye.z);
     Environment_UpdateSkybox(skyboxId, envCtx, skyboxCtx);
 }

@@ -146,15 +146,6 @@ Vtx skybox_cylinder_vertices[37] = {
 void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightContext* lightCtx, s16 skyboxId, s16 blend, f32 x, f32 y, f32 z) {
     Vtx* vtx;
     u8 i;
-    /* u32 filterA; */
-
-    // you can use this for regular fog if you want
-    /* if (lightCtx->fogNear < 1000) {
-        filterA = (1000 - lightCtx->fogNear) * (255.0f / 50);
-        if (filterA > 255) {
-            filterA = 255;
-        }
-    } */
 
     vtx = Graph_Alloc(gfxCtx, sizeof(Vtx) * 37);
 
@@ -192,13 +183,8 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
             }
         }
     }
-
-    // to emulate fog, you can remove combined color alpha and add primitive color alpha to the combiner cycle 2
-    // or just manually add the stupid fog
     
     OPEN_DISPS(gfxCtx, "../z_cheap_proc.c", 214);
-
-    /* POLY_OPA_DISP = Gfx_SetFog(POLY_OPA_DISP, lightCtx->fogColor[0], lightCtx->fogColor[1], lightCtx->fogColor[2], filterA, lightCtx->fogNear, 1000); */
 
     sSkyboxDrawMatrix = Graph_Alloc(gfxCtx, sizeof(Mtx));
     Matrix_Translate(x, y, z, MTXMODE_NEW);
@@ -231,10 +217,6 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     gSPVertex(POLY_OPA_DISP++, vtx + 32, 5, 0);
     gSP2Triangles(POLY_OPA_DISP++, 0, 1, 2, 0, 0, 3, 1, 0);
     gSP1Triangle(POLY_OPA_DISP++, 1, 4, 2, 0);
-
-    // reset regular gameplay fog
-    /* POLY_OPA_DISP = Gfx_SetFog2(POLY_OPA_DISP, lightCtx->fogColor[0], lightCtx->fogColor[1], lightCtx->fogColor[2], 0,
-                       lightCtx->fogNear, 1000); */
 
     CLOSE_DISPS(gfxCtx, "../z_cheap_proc.c", 219);
 }
