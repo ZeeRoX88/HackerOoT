@@ -624,6 +624,7 @@ void Play_Init(GameState* thisx) {
     this->gameplayFrames = 0;
 
     Environment_InitClouds(this);
+    Environment_DynamicWeather(this);
 }
 
 void Play_Update(PlayState* this) {
@@ -1547,7 +1548,9 @@ void Play_Draw(PlayState* this) {
                         Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
                     }
                     Environment_DrawSkybox(this);
-                    Environment_DynamicWeather(this);
+                    if ((this->gameplayFrames % 200) == 0) {
+                        Environment_DynamicWeather(this);
+                    }
                 }
             }
         }

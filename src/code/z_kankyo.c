@@ -308,6 +308,7 @@ Gfx* sSkyboxStarsDList;
 s32 sEnvSkyboxNumStars = 0;
 f32 sStarAlpha;
 u8 sCloudDensity = 16;
+u8 weatherModeTest = 0;
 
 #define ZBUFVAL_EXPONENT(v) (((v) >> 15) & 7)
 #define ZBUFVAL_MANTISSA(v) (((v) >> 4) & 0x7FF)
@@ -1973,39 +1974,143 @@ typedef struct WeatherEvent {
     u8 state; // 0 sunny, 1 cloudy, 2 rain, 3 thunderstorm
 } WeatherEvent; // size = 0xC
 
-WeatherEvent weatherSchedule[] = {
-    {CLOCK_TIME(0, 0),  CLOCK_TIME(6, 0),   0},
-    {CLOCK_TIME(6, 0),  CLOCK_TIME(12, 0),  1},
-    {CLOCK_TIME(12, 0), CLOCK_TIME(16, 0),  2},
-    {CLOCK_TIME(16, 0), CLOCK_TIME(20, 0),  3},
+static WeatherEvent weatherSchedule[] = {
+    {0,  CLOCK_TIME(23,0) + 1,  0xFF},
+    {0,  CLOCK_TIME(23,0) + 1,  0xFF},
+    {0,  CLOCK_TIME(23,0) + 1,  0xFF},
+    {0,  CLOCK_TIME(23,0) + 1,  0xFF}, // last entry is a marker to calculate weather again
 };
 
 void Environment_CalculateWeather(PlayState* play) {
-    // gSaveContext.save.dayTime
+    u16 prevEndTime = gSaveContext.save.dayTime;
+
+    if (Rand_ZeroOne() <= 0.75f && weatherModeTest == 0) { // hit weather event if it is sunny, it will be at least cloudy
+        if (Rand_ZeroOne() <= 0.75f) { // rain/thunder, shorter schedule
+            u8 randState = (u8)(Rand_ZeroOne() + 1.9f);
+            if (randState == 0) {
+                Debug_Print(3, "hit rainy event");
+            } else {
+                Debug_Print(3, "hit thunder event");
+            }
+            for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
+                weatherSchedule[i].startTime = prevEndTime;
+                weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(3,0); // 3/6/9
+                prevEndTime = weatherSchedule[i].endTime;
+                if (i == 1) {
+                    weatherSchedule[i].state = 1 + randState;
+                } else {
+                    weatherSchedule[i].state = 1; // cloudy
+                }
+            }
+        } else { // cloudy day, longer schedule
+            Debug_Print(3, "hit cloudy day event");
+            for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
+                weatherSchedule[i].startTime = prevEndTime;
+                weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(6,0); // 6/12/18
+                prevEndTime = weatherSchedule[i].endTime;
+                weatherSchedule[i].state = 1; // 1 is cloudy
+            }
+        }
+    } else { // sunny day, longer schedule, you could add some other clear skies events here or determine the amount of clouds
+        Debug_Print(3, "hit sunny day event");
+        for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
+            weatherSchedule[i].startTime = prevEndTime;
+            weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(6,0); // 6/12/18
+            prevEndTime = weatherSchedule[i].endTime;
+            weatherSchedule[i].state = 0; // 0 is sunny
+        }
+    }
+    weatherSchedule[3].startTime = prevEndTime;
+    weatherSchedule[3].endTime = prevEndTime + CLOCK_TIME(6,0); // for marker
 }
 
 /* 
-Notes: Nighttime is running faster, maybe change this
+Notes: 
+- Nighttime is running faster, maybe change this
+- Investigate fog glitch and fix it
  */
 
 void Environment_DynamicWeather(PlayState* play) {
+    u8 i = 0;
     s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
     s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60;
+
     Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
     Debug_Print_Draw(0, play);
 
-    for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule); i++) {
+    for (i = 0; i < ARRAY_COUNT(weatherSchedule); i++) {
         if (gSaveContext.skyboxTime >= weatherSchedule[i].startTime &&
             (gSaveContext.skyboxTime < weatherSchedule[i].endTime ||
-            weatherSchedule[i].endTime == 0xFFFF)) {
+            weatherSchedule[i].endTime == 0xFFFF || (weatherSchedule[i].startTime > weatherSchedule[i].endTime && gSaveContext.skyboxTime >= weatherSchedule[i].endTime))) {
             Debug_Print(1, "state:%d", weatherSchedule[i].state);
             Debug_Print_Draw(1, play);
+
+            switch (weatherSchedule[i].state) {
+                case 0:
+                    Debug_Print(2, "sunny");
+                break;
+                case 1:
+                    Debug_Print(2, "cloudy");
+                break;
+                case 2:
+                    Debug_Print(2, "rain");
+                break;
+                case 3:
+                    Debug_Print(2, "thunder");
+                break;
+            }
+            Debug_Print_Draw(2, play);
             break;
         }
     }
+    // marker hit, randomly calculate weather
+    if (weatherSchedule[i].state == 0xFF) {
+        Environment_CalculateWeather(play);
+        i = 0;
+    }
+
+    if (weatherSchedule[i].state != weatherModeTest && weatherSchedule[i].state != 0xFF) {
+        weatherModeTest = weatherSchedule[i].state;
+    }
+    Debug_Print_Draw(3, play);
+
+    s16 testSchedStartHour = (weatherSchedule[0].startTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    s16 testSchedStartMin = (s16)(weatherSchedule[0].startTime * (24.0f * 60.0f / 0x10000)) % 60;
+    s16 testSchedEndHour = (weatherSchedule[0].endTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    s16 testSchedEndMin = (s16)(weatherSchedule[0].endTime * (24.0f * 60.0f / 0x10000)) % 60;
+
+    Debug_Print(4, "event0:%02d:%02d, %02d:%02d, s:%d", testSchedStartHour, testSchedStartMin, testSchedEndHour, testSchedEndMin, weatherSchedule[0].state);
+    Debug_Print_Draw(4, play);
+
+    testSchedStartHour = (weatherSchedule[1].startTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    testSchedStartMin = (s16)(weatherSchedule[1].startTime * (24.0f * 60.0f / 0x10000)) % 60;
+    testSchedEndHour = (weatherSchedule[1].endTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    testSchedEndMin = (s16)(weatherSchedule[1].endTime * (24.0f * 60.0f / 0x10000)) % 60;
+
+    Debug_Print(5, "event1:%02d:%02d, %02d:%02d, s:%d", testSchedStartHour, testSchedStartMin, testSchedEndHour, testSchedEndMin, weatherSchedule[1].state);
+    Debug_Print_Draw(5, play);
+
+    testSchedStartHour = (weatherSchedule[2].startTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    testSchedStartMin = (s16)(weatherSchedule[2].startTime * (24.0f * 60.0f / 0x10000)) % 60;
+    testSchedEndHour = (weatherSchedule[2].endTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    testSchedEndMin = (s16)(weatherSchedule[2].endTime * (24.0f * 60.0f / 0x10000)) % 60;
+
+    Debug_Print(6, "event2:%02d:%02d, %02d:%02d, s:%d", testSchedStartHour, testSchedStartMin, testSchedEndHour, testSchedEndMin, weatherSchedule[2].state);
+    Debug_Print_Draw(6, play);
+
+    testSchedStartHour = (weatherSchedule[3].startTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    testSchedStartMin = (s16)(weatherSchedule[3].startTime * (24.0f * 60.0f / 0x10000)) % 60;
+    testSchedEndHour = (weatherSchedule[3].endTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    testSchedEndMin = (s16)(weatherSchedule[3].endTime * (24.0f * 60.0f / 0x10000)) % 60;
+
+    Debug_Print(7, "event3:%02d:%02d, %02d:%02d, s:%d", testSchedStartHour, testSchedStartMin, testSchedEndHour, testSchedEndMin, weatherSchedule[3].state);
+    Debug_Print_Draw(7, play);
 }
 
 void Environment_DrawSunAndMoon(PlayState* play) {
+    Debug_Print(8, "wstate:%d", weatherModeTest);
+    Debug_Print_Draw(8, play);
+
     // This replace gMoonDL in gameplay_keep. TODO make this gMoonDL once asset replacement is sophisticated enough
     static Gfx sMoonDL[] = {
         gsSPMatrix(0x01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW),
