@@ -11,9 +11,9 @@ Mtx* sSkyboxDrawMatrix;
 Mtx* Skybox_UpdateMatrix(SkyboxContext* skyboxCtx, f32 x, f32 y, f32 z) {
     Matrix_Translate(x, y, z, MTXMODE_NEW);
     Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_APPLY);
-    Matrix_RotateX(skyboxCtx->rot.x, MTXMODE_APPLY);
+    /* Matrix_RotateX(skyboxCtx->rot.x, MTXMODE_APPLY);
     Matrix_RotateY(skyboxCtx->rot.y, MTXMODE_APPLY);
-    Matrix_RotateZ(skyboxCtx->rot.z, MTXMODE_APPLY);
+    Matrix_RotateZ(skyboxCtx->rot.z, MTXMODE_APPLY); */
     return MATRIX_TO_MTX(sSkyboxDrawMatrix, "../z_vr_box_draw.c", 42);
 }
 
@@ -187,7 +187,7 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     
     OPEN_DISPS(gfxCtx, "../z_cheap_proc.c", 214);
 
-    gSPSegment(POLY_OPA_DISP++, 0x7, skyboxCtx->skyboxStaticSegment);
+    gSPSegment(POLY_OPA_DISP++, 0x7, skyboxCtx->skyboxStaticSegment); // setting the correct segment for opa
 
     sSkyboxDrawMatrix = Graph_Alloc(gfxCtx, sizeof(Mtx));
     Matrix_Translate(x, y, z, MTXMODE_NEW);
@@ -220,6 +220,8 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     gSPVertex(POLY_OPA_DISP++, vtx + 32, 5, 0);
     gSP2Triangles(POLY_OPA_DISP++, 0, 1, 2, 0, 0, 3, 1, 0);
     gSP1Triangle(POLY_OPA_DISP++, 1, 4, 2, 0);
+
+    // add the cloud draw code here
 
     CLOSE_DISPS(gfxCtx, "../z_cheap_proc.c", 219);
 }

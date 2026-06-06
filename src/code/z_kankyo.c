@@ -379,7 +379,7 @@ void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) 
     envCtx->changeLightEnabled = false;
     envCtx->changeLightTimer = 0;
 
-    envCtx->skyboxDmaState = SKYBOX_DMA_INACTIVE;
+    // envCtx->skyboxDmaState = SKYBOX_DMA_INACTIVE;
     envCtx->lightConfig = 0;
     envCtx->changeLightNextConfig = 0;
 
@@ -845,8 +845,8 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
         }
 #endif
 
-        if ((envCtx->skybox1Index != newSkybox1Index) && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE)) {
-            envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE1_START;
+        if ((envCtx->skybox1Index != newSkybox1Index)/*  && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE) */) {
+            // envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE1_START;
             /* size = gNormalSkyFiles[newSkybox1Index].file.vromEnd - gNormalSkyFiles[newSkybox1Index].file.vromStart;
 
             osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
@@ -856,8 +856,8 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
             envCtx->skybox1Index = newSkybox1Index;
         }
 
-        if ((envCtx->skybox2Index != newSkybox2Index) && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE)) {
-            envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE2_START;
+        if ((envCtx->skybox2Index != newSkybox2Index)/*  && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE) */) {
+            // envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE2_START;
             /* size = gNormalSkyFiles[newSkybox2Index].file.vromEnd - gNormalSkyFiles[newSkybox2Index].file.vromStart;
 
             osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
@@ -867,8 +867,8 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
             envCtx->skybox2Index = newSkybox2Index;
         }
 
-        if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_DONE) {
-            envCtx->skyboxDmaState = SKYBOX_DMA_TLUT1_START;
+        /* if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_DONE) {
+            envCtx->skyboxDmaState = SKYBOX_DMA_TLUT1_START; */
 
             /* if ((newSkybox1Index & 1) ^ ((newSkybox1Index & 4) >> 2)) {
                 size = gNormalSkyFiles[newSkybox1Index].palette.vromEnd -
@@ -886,10 +886,10 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
                                   gNormalSkyFiles[newSkybox1Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
                                   "../z_kankyo.c", 1320);
             } */
-        }
+        /* } */
 
-        if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_DONE) {
-            envCtx->skyboxDmaState = SKYBOX_DMA_TLUT2_START;
+        /* if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_DONE) {
+            envCtx->skyboxDmaState = SKYBOX_DMA_TLUT2_START; */
 
             /* if ((newSkybox2Index & 1) ^ ((newSkybox2Index & 4) >> 2)) {
                 size = gNormalSkyFiles[newSkybox2Index].palette.vromEnd -
@@ -907,7 +907,7 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
                                   gNormalSkyFiles[newSkybox2Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
                                   "../z_kankyo.c", 1355);
             } */
-        }
+        /* } */
 
         /* if ((envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_START) ||
             (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_START)) {
@@ -1710,6 +1710,42 @@ void Environment_DrawSkyboxStarsImpl(PlayState* play, Gfx** gfxP) {
     *gfxP = gfx;
 }
 
+void Environment_DrawSkybox(PlayState* play) {
+    Skybox_DrawNew(&play->skyboxCtx, play->state.gfxCtx, &play->lightCtx, play->skyboxId, play->envCtx.skyboxBlend,
+                    play->view.eye.x, play->view.eye.y, play->view.eye.z);
+
+    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+    gSPSegment(POLY_XLU_DISP++, 0x7, play->skyboxCtx.skyboxStaticSegment); // setting the correct segment for xlu
+
+    Environment_DrawCloudStorm(play);
+
+    static u8 fogIntensity;
+    if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
+        if (play->lightCtx.fogNear < 980) {
+            fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
+        } else {
+            fogIntensity = CLAMP_MAX(fogIntensity + 35, 200);
+        }
+    } else {
+        if (play->lightCtx.fogNear < 980) {
+            fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
+        } else {
+            fogIntensity = CLAMP_MIN(fogIntensity - 35, 0);
+        }
+    }
+
+    POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1],
+                               play->lightCtx.fogColor[2], fogIntensity, play->lightCtx.fogNear, 1000);
+    
+    Environment_DrawCloudHorizon(play);
+    Environment_DrawClouds(play);
+
+    POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
+
+    CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+}
+
 void Environment_DrawSkyboxStars(PlayState* play) {
     Gfx* gfx;
     Gfx* gfxHead;
@@ -1807,12 +1843,12 @@ void Environment_DrawCloudStorm(PlayState* play) {
     u32 filterA = 0;
 
     // you can use this for regular fog if you want
-    if (play->lightCtx.fogNear < 980) {
+    /* if (play->lightCtx.fogNear < 980) {
         filterA = (980 - play->lightCtx.fogNear) * (255.0f / 50);
         if (filterA > 255) {
             filterA = 255;
         }
-    }
+    } */
 
     if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
         stormAlpha = CLAMP_MAX(stormAlpha + 5, 180);
@@ -1828,7 +1864,7 @@ void Environment_DrawCloudStorm(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
-    POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1], play->lightCtx.fogColor[2], filterA, play->lightCtx.fogNear, 1000);
+    // POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1], play->lightCtx.fogColor[2], filterA, play->lightCtx.fogNear, 1000);
 
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], stormAlpha);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
@@ -1841,17 +1877,17 @@ void Environment_DrawCloudStorm(PlayState* play) {
               G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     gSPDisplayList(POLY_XLU_DISP++, skybox_storm_cloud);
 
-    POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
+    // POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
 
     CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 }
 
 // cloud ring
 void Environment_DrawCloudHorizon(PlayState* play) {
-    static u8 fogIntensity;
+    // static u8 fogIntensity;
 
     // play->envCtx.dirLight1.params.dir.color[0] etc is white for Hyrule Field adult fog state, causing it to look weird
-    if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
+    /* if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
         if (play->lightCtx.fogNear < 980) {
             fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
         } else {
@@ -1863,12 +1899,12 @@ void Environment_DrawCloudHorizon(PlayState* play) {
         } else {
             fogIntensity = CLAMP_MIN(fogIntensity - 35, 0);
         }
-    }
+    } */
     
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
-    POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1],
-                               play->lightCtx.fogColor[2], fogIntensity, play->lightCtx.fogNear, 1000);
+    /* POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1],
+                               play->lightCtx.fogColor[2], fogIntensity, play->lightCtx.fogNear, 1000); */
 
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], 150);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
@@ -1925,7 +1961,7 @@ void Environment_DrawClouds(PlayState* play) {
         gSPDisplayList(POLY_XLU_DISP++, skybox_cloud);
     }
 
-    POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
+    /* POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP); */
 
     CLOSE_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 219);
 }

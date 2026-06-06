@@ -85,7 +85,7 @@ void Helpers_InitSkybox(GameState* gameState, EnvironmentContext* envCtx, Skybox
     envCtx->changeSkyboxTimer = 0;
     envCtx->changeLightEnabled = false;
     envCtx->changeLightTimer = 0;
-    envCtx->skyboxDmaState = SKYBOX_DMA_INACTIVE;
+    // envCtx->skyboxDmaState = SKYBOX_DMA_INACTIVE;
     envCtx->skybox1Index = 99;
     envCtx->skybox2Index = 99;
     envCtx->lightConfig = 0;

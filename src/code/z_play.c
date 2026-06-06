@@ -51,6 +51,7 @@
 #include "libu64/gfxprint.h"
 #include "debug.h"
 #include "animated_materials.h"
+#include "z_debug.h"
 
 #if CAN_INCLUDE_EXAMPLE_SCENE
 #include "assets/scenes/example/example_scene.h"
@@ -1545,12 +1546,12 @@ void Play_Draw(PlayState* this) {
                     if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
                         Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
                     }
-                    Skybox_DrawNew(&this->skyboxCtx, gfxCtx, &this->lightCtx, this->skyboxId, this->envCtx.skyboxBlend,
-                                this->view.eye.x, this->view.eye.y, this->view.eye.z);
-                    gSPSegment(POLY_XLU_DISP++, 0x7, this->skyboxCtx.skyboxStaticSegment);
-                    Environment_DrawCloudStorm(this);
-                    Environment_DrawCloudHorizon(this);
-                    Environment_DrawClouds(this);
+                    Environment_DrawSkybox(this);
+
+                    s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+                    s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60;
+                    Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
+                    Debug_Print_Draw(0, this);
                 }
             }
         }

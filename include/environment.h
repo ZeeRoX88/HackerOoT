@@ -312,5 +312,6 @@ void Environment_UpdateClouds(struct PlayState* play);
 
 void Environment_SetupSkyboxStars(struct PlayState* play);
 void Environment_DrawSkyboxStars(struct PlayState* play);
+void Environment_DrawSkybox(struct PlayState* play);
 
 #endif

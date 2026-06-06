@@ -11,6 +11,8 @@
 #include "rumble.h"
 #include "ultra64.h"
 #include "z_debug.h"
+#include "libc64/sprintf.h"
+#include "play_state.h"
 
 // ENABLE_CAMERA_DEBUGGER
 typedef struct DebugCamTextBufferEntry {
@@ -351,4 +353,128 @@ void Debug_DrawText(GraphicsContext* gfxCtx) {
 
     GfxPrint_Destroy(&printer);
 #endif
+}
+
+/* 
+f Float
+d Signed Integer
+x Signed hexadecimal (lowercase).
+X Signed hexadecimal (uppercase).
+ */
+
+// KentonM debug print
+static char print_reg_0[32];
+static char print_reg_1[32];
+static char print_reg_2[32];
+static char print_reg_3[32];
+static char print_reg_4[32];
+static char print_reg_5[32];
+static char print_reg_6[32];
+static char print_reg_7[32];
+static char print_reg_8[32];
+/* ... etc ... */
+
+static u8 print_reg_fresh[9];
+
+void Debug_Print_Draw(u8 line, PlayState* play) {
+    GfxPrint printer;
+    Gfx* gfx;
+
+    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+    gfx = POLY_OPA_DISP + 1;
+    gSPDisplayList(OVERLAY_DISP++, gfx);
+
+    GfxPrint_Init(&printer);
+    GfxPrint_Open(&printer, gfx);
+
+    if (print_reg_fresh[line]) {
+        GfxPrint_SetColor(&printer, 255, 0, 255, 255);
+    } else {
+        GfxPrint_SetColor(&printer, 200, 200, 200, 255);
+    }
+    GfxPrint_SetPos(&printer, 1, 7 + line);
+    switch (line) {
+        case 0:
+            GfxPrint_Printf(&printer, print_reg_0);
+            break;
+        case 1:
+            GfxPrint_Printf(&printer, print_reg_1);
+            break;
+        case 2:
+            GfxPrint_Printf(&printer, print_reg_2);
+            break;
+        case 3:
+            GfxPrint_Printf(&printer, print_reg_3);
+            break;
+        case 4:
+            GfxPrint_Printf(&printer, print_reg_4);
+            break;
+        case 5:
+            GfxPrint_Printf(&printer, print_reg_5);
+            break;
+        case 6:
+            GfxPrint_Printf(&printer, print_reg_6);
+            break;
+        case 7:
+            GfxPrint_Printf(&printer, print_reg_7);
+            break;
+        case 8:
+            GfxPrint_Printf(&printer, print_reg_8);
+            break;
+        /* ... etc ... */
+        default:
+            return;
+    }
+    print_reg_fresh[line] = 0;
+
+    gfx = GfxPrint_Close(&printer);
+    GfxPrint_Destroy(&printer);
+
+    gSPEndDisplayList(gfx++);
+    gSPBranchList(POLY_OPA_DISP, gfx);
+    POLY_OPA_DISP = gfx;
+
+    CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+}
+
+void Debug_Print(u8 line, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    switch (line) {
+        case 0:
+            vsprintf(print_reg_0, fmt, args);
+            break;
+        case 1:
+            vsprintf(print_reg_1, fmt, args);
+            break;
+        case 2:
+            vsprintf(print_reg_2, fmt, args);
+            break;
+        case 3:
+            vsprintf(print_reg_3, fmt, args);
+            break;
+        case 4:
+            vsprintf(print_reg_4, fmt, args);
+            break;
+        case 5:
+            vsprintf(print_reg_5, fmt, args);
+            break;
+        case 6:
+            vsprintf(print_reg_6, fmt, args);
+            break;
+        case 7:
+            vsprintf(print_reg_7, fmt, args);
+            break;
+        case 8:
+            vsprintf(print_reg_8, fmt, args);
+            break;
+        /* ... etc ... */
+        default:
+            return;
+    }
+    print_reg_fresh[line] = 1;
+
+    va_end(args);
 }
