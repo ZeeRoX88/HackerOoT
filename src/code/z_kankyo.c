@@ -34,6 +34,7 @@
 #include "debug.h"
 #include "skin_matrix.h"
 #include "rand.h"
+#include "z_debug.h"
 
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
 #include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
@@ -1964,6 +1965,44 @@ void Environment_DrawClouds(PlayState* play) {
     /* POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP); */
 
     CLOSE_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 219);
+}
+
+typedef struct WeatherEvent {
+    u16 startTime;
+    u16 endTime;
+    u8 state; // 0 sunny, 1 cloudy, 2 rain, 3 thunderstorm
+} WeatherEvent; // size = 0xC
+
+WeatherEvent weatherSchedule[] = {
+    {CLOCK_TIME(0, 0),  CLOCK_TIME(6, 0),   0},
+    {CLOCK_TIME(6, 0),  CLOCK_TIME(12, 0),  1},
+    {CLOCK_TIME(12, 0), CLOCK_TIME(16, 0),  2},
+    {CLOCK_TIME(16, 0), CLOCK_TIME(20, 0),  3},
+};
+
+void Environment_CalculateWeather(PlayState* play) {
+    // gSaveContext.save.dayTime
+}
+
+/* 
+Notes: Nighttime is running faster, maybe change this
+ */
+
+void Environment_DynamicWeather(PlayState* play) {
+    s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60;
+    Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
+    Debug_Print_Draw(0, play);
+
+    for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule); i++) {
+        if (gSaveContext.skyboxTime >= weatherSchedule[i].startTime &&
+            (gSaveContext.skyboxTime < weatherSchedule[i].endTime ||
+            weatherSchedule[i].endTime == 0xFFFF)) {
+            Debug_Print(1, "state:%d", weatherSchedule[i].state);
+            Debug_Print_Draw(1, play);
+            break;
+        }
+    }
 }
 
 void Environment_DrawSunAndMoon(PlayState* play) {

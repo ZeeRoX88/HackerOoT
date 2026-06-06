@@ -1547,11 +1547,7 @@ void Play_Draw(PlayState* this) {
                         Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
                     }
                     Environment_DrawSkybox(this);
-
-                    s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
-                    s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60;
-                    Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
-                    Debug_Print_Draw(0, this);
+                    Environment_DynamicWeather(this);
                 }
             }
         }
