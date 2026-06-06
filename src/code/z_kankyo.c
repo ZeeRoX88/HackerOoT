@@ -308,7 +308,7 @@ Gfx* sSkyboxStarsDList;
 s32 sEnvSkyboxNumStars = 0;
 f32 sStarAlpha;
 u8 sCloudDensity = 16;
-u8 weatherModeTest = 0;
+static u8 weatherModeTest;
 
 #define ZBUFVAL_EXPONENT(v) (((v) >> 15) & 7)
 #define ZBUFVAL_MANTISSA(v) (((v) >> 4) & 0x7FF)
@@ -1968,6 +1968,13 @@ void Environment_DrawClouds(PlayState* play) {
     CLOSE_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 219);
 }
 
+enum {
+    WEATHER_EVENT_SUNNY,
+    WEATHER_EVENT_CLOUDY,
+    WEATHER_EVENT_RAIN,
+    WEATHER_EVENT_THUNDER
+};
+
 typedef struct WeatherEvent {
     u16 startTime;
     u16 endTime;
@@ -2035,17 +2042,17 @@ void Environment_DynamicWeather(PlayState* play) {
     s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
     s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60;
 
-    Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
-    Debug_Print_Draw(0, play);
+    /* Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
+    Debug_Print_Draw(0, play); */
 
     for (i = 0; i < ARRAY_COUNT(weatherSchedule); i++) {
         if (gSaveContext.skyboxTime >= weatherSchedule[i].startTime &&
             (gSaveContext.skyboxTime < weatherSchedule[i].endTime ||
             weatherSchedule[i].endTime == 0xFFFF || (weatherSchedule[i].startTime > weatherSchedule[i].endTime && gSaveContext.skyboxTime >= weatherSchedule[i].endTime))) {
-            Debug_Print(1, "state:%d", weatherSchedule[i].state);
-            Debug_Print_Draw(1, play);
+            /* Debug_Print(1, "state:%d", weatherSchedule[i].state);
+            Debug_Print_Draw(1, play); */
 
-            switch (weatherSchedule[i].state) {
+            /* switch (weatherSchedule[i].state) {
                 case 0:
                     Debug_Print(2, "sunny");
                 break;
@@ -2059,7 +2066,7 @@ void Environment_DynamicWeather(PlayState* play) {
                     Debug_Print(2, "thunder");
                 break;
             }
-            Debug_Print_Draw(2, play);
+            Debug_Print_Draw(2, play); */
             break;
         }
     }
@@ -2069,10 +2076,57 @@ void Environment_DynamicWeather(PlayState* play) {
         i = 0;
     }
 
-    if (weatherSchedule[i].state != weatherModeTest && weatherSchedule[i].state != 0xFF) {
+    if (weatherSchedule[i].state != weatherModeTest && weatherSchedule[i].state <= 3) {
         weatherModeTest = weatherSchedule[i].state;
+
+        switch (weatherModeTest) {
+            case WEATHER_EVENT_SUNNY:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
+                if (play->csCtx.state == CS_STATE_IDLE) {
+                    Environment_StopStormNatureAmbience(play);
+                } else if (Audio_GetActiveSeqId(SEQ_PLAYER_BGM_MAIN) == NA_BGM_NATURE_AMBIENCE) {
+                    Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_LIGHTNING, CHANNEL_IO_PORT_1, 0);
+                    Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_RAIN, CHANNEL_IO_PORT_1, 0);
+                }
+                if (gWeatherMode == WEATHER_MODE_CLEAR && (play->envCtx.stormRequest == STORM_REQUEST_START)) {
+                    play->envCtx.stormRequest = STORM_REQUEST_STOP;
+                } else {
+                    play->envCtx.stormRequest = STORM_REQUEST_NONE;
+                    play->envCtx.stormState = STORM_STATE_OFF;
+                }
+                play->envCtx.lightningState = LIGHTNING_OFF;
+            break;
+            case WEATHER_EVENT_CLOUDY:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
+                play->envCtx.stormRequest = STORM_REQUEST_START;
+                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                    play->envCtx.stormState = STORM_STATE_ON;
+                }
+                play->envCtx.lightningState = LIGHTNING_OFF;
+            break;
+            case WEATHER_EVENT_RAIN:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
+                play->envCtx.stormRequest = STORM_REQUEST_START;
+                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                    play->envCtx.stormState = STORM_STATE_ON;
+                }
+                Environment_PlayStormNatureAmbience(play);
+            break;
+            case WEATHER_EVENT_THUNDER:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
+                play->envCtx.stormRequest = STORM_REQUEST_START;
+                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                    play->envCtx.stormState = STORM_STATE_ON;
+                }
+                play->envCtx.lightningState = LIGHTNING_ON;
+                Environment_PlayStormNatureAmbience(play);
+            break;
+        }
     }
-    Debug_Print_Draw(3, play);
+
+
+
+    /* Debug_Print_Draw(3, play);
 
     s16 testSchedStartHour = (weatherSchedule[0].startTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
     s16 testSchedStartMin = (s16)(weatherSchedule[0].startTime * (24.0f * 60.0f / 0x10000)) % 60;
@@ -2104,7 +2158,7 @@ void Environment_DynamicWeather(PlayState* play) {
     testSchedEndMin = (s16)(weatherSchedule[3].endTime * (24.0f * 60.0f / 0x10000)) % 60;
 
     Debug_Print(7, "event3:%02d:%02d, %02d:%02d, s:%d", testSchedStartHour, testSchedStartMin, testSchedEndHour, testSchedEndMin, weatherSchedule[3].state);
-    Debug_Print_Draw(7, play);
+    Debug_Print_Draw(7, play); */
 }
 
 void Environment_DrawSunAndMoon(PlayState* play) {
