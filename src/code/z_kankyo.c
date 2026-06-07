@@ -2143,8 +2143,7 @@ void Environment_DrawSunAndMoon(PlayState* play) {
         Math_SmoothStepToF(&play->envCtx.sunPos.y,
                            (Math_CosS(((void)0, gSaveContext.save.dayTime) - CLOCK_TIME(12, 0)) * 120.0f) * 25.0f, 1.0f,
                            0.8f, 0.8f);
-        //! @bug This should be z.
-        Math_SmoothStepToF(&play->envCtx.sunPos.y,
+        Math_SmoothStepToF(&play->envCtx.sunPos.z,
                            (Math_CosS(((void)0, gSaveContext.save.dayTime) - CLOCK_TIME(12, 0)) * 20.0f) * 25.0f, 1.0f,
                            0.8f, 0.8f);
     } else {
@@ -2173,15 +2172,19 @@ void Environment_DrawSunAndMoon(PlayState* play) {
             color = 1.0f;
         }
 
-        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, (u8)(color * 75.0f) + 180, (u8)(color * 155.0f) + 100, 255);
-        gDPSetEnvColor(POLY_OPA_DISP++, 255, (u8)(color * 255.0f), (u8)(color * 255.0f), alpha);
-
-        scale = (color * 2.0f) + 10.0f;
-        Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
-        MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, play->state.gfxCtx, "../z_kankyo.c", 2364);
         Gfx_SetupDL_54Opa(play->state.gfxCtx);
         gDPSetRenderMode(POLY_OPA_DISP++, G_RM_FOG_PRIM_A, G_RM_XLU_SURF2);
-        gSPDisplayList(POLY_OPA_DISP++, gSunDL);
+
+        // draw sun only above a certain height
+        if (play->envCtx.sunPos.y > -500.0f) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, (u8)(color * 75.0f) + 180, (u8)(color * 155.0f) + 100, 255);
+            gDPSetEnvColor(POLY_OPA_DISP++, 255, (u8)(color * 255.0f), (u8)(color * 255.0f), alpha);
+
+            scale = (color * 2.0f) + 10.0f;
+            Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+            MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, play->state.gfxCtx, "../z_kankyo.c", 2364);
+            gSPDisplayList(POLY_OPA_DISP++, gSunDL);
+        }
 
         Matrix_Translate(play->view.eye.x - play->envCtx.sunPos.x, play->view.eye.y - play->envCtx.sunPos.y,
                          play->view.eye.z - play->envCtx.sunPos.z, MTXMODE_NEW);
