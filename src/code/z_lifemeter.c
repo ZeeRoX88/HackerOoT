@@ -481,6 +481,7 @@ void Health_DrawMeter(PlayState* play) {
                 if (curCombineModeSet != 2) {
                     curCombineModeSet = 2;
                     Gfx_SetupDL_42Overlay(gfxCtx);
+                    gDPSetAlphaCompare(OVERLAY_DISP++, G_AC_THRESHOLD);
                     gDPSetCombineLERP(OVERLAY_DISP++, PRIMITIVE, ENVIRONMENT, TEXEL0, ENVIRONMENT, TEXEL0, 0, PRIMITIVE,
                                       0, PRIMITIVE, ENVIRONMENT, TEXEL0, ENVIRONMENT, TEXEL0, 0, PRIMITIVE, 0);
                 }
@@ -488,6 +489,7 @@ void Health_DrawMeter(PlayState* play) {
                 if (curCombineModeSet != 4) {
                     curCombineModeSet = 4;
                     Gfx_SetupDL_42Overlay(gfxCtx);
+                    gDPSetAlphaCompare(OVERLAY_DISP++, G_AC_THRESHOLD);
                     gDPSetCombineLERP(OVERLAY_DISP++, ENVIRONMENT, PRIMITIVE, TEXEL0, PRIMITIVE, TEXEL0, 0, PRIMITIVE,
                                       0, ENVIRONMENT, PRIMITIVE, TEXEL0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0);
                 }

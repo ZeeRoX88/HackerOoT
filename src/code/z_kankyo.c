@@ -2771,6 +2771,7 @@ void Environment_DrawLightning(PlayState* play, s32 unused) {
             gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(lightningTextures[sLightningBolts[i].textureIndex]));
             IF_F3DEX3_DONT_SKIP_TEX_HERE(POLY_XLU_DISP++, sLightningBolts[i].textureIndex);
             Gfx_SetupDL_61Xlu(play->state.gfxCtx);
+            gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
             gSPMatrix(POLY_XLU_DISP++, &D_01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW);
             gSPDisplayList(POLY_XLU_DISP++, gEffLightningDL);
         }
