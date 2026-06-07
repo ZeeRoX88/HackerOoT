@@ -310,6 +310,13 @@ f32 sStarAlpha;
 u8 sCloudDensity = 16;
 static u8 weatherModeTest;
 
+enum {
+    WEATHER_EVENT_SUNNY,
+    WEATHER_EVENT_CLOUDY,
+    WEATHER_EVENT_RAIN,
+    WEATHER_EVENT_THUNDER
+};
+
 #define ZBUFVAL_EXPONENT(v) (((v) >> 15) & 7)
 #define ZBUFVAL_MANTISSA(v) (((v) >> 4) & 0x7FF)
 
@@ -349,6 +356,7 @@ void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) 
     sEnvSkyboxNumStars = 0;
     gSkyboxNumStars = 200; // maybe you could slowly increase and decrease
 
+    // initialize skybox vertex colors
     for (i = 0; i < 3; i++) {
         play->skyboxCtx.skyboxTopColor[i] = skyboxColors[envCtx->skybox1Index][0][i];
         play->skyboxCtx.skyboxBottomColor[i] = skyboxColors[envCtx->skybox1Index][1][i];
@@ -550,6 +558,89 @@ void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) 
 
     gCustomLensFlareOn = false;
     Rumble_Reset();
+
+    // test weather init, rewrite this later
+    // problem: gweathermode and storm request act independently and block the other one depending which system acts first
+    switch (weatherModeTest) {
+            case WEATHER_EVENT_SUNNY:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
+                if (play->csCtx.state == CS_STATE_IDLE) {
+                    Environment_StopStormNatureAmbience(play);
+                } else if (Audio_GetActiveSeqId(SEQ_PLAYER_BGM_MAIN) == NA_BGM_NATURE_AMBIENCE) {
+                    Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_LIGHTNING, CHANNEL_IO_PORT_1, 0);
+                    Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_RAIN, CHANNEL_IO_PORT_1, 0);
+                }
+                if (gWeatherMode == WEATHER_MODE_CLEAR && (play->envCtx.stormRequest == STORM_REQUEST_START)) {
+                    play->envCtx.stormRequest = STORM_REQUEST_STOP;
+                } else {
+                    play->envCtx.stormRequest = STORM_REQUEST_NONE;
+                    play->envCtx.stormState = STORM_STATE_OFF;
+                }
+                play->envCtx.lightningState = LIGHTNING_OFF;
+            break;
+            case WEATHER_EVENT_CLOUDY:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
+                play->envCtx.stormRequest = STORM_REQUEST_START;
+                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                    play->envCtx.stormState = STORM_STATE_ON;
+                }
+                play->envCtx.lightningState = LIGHTNING_OFF;
+            break;
+            case WEATHER_EVENT_RAIN:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
+                play->envCtx.stormRequest = STORM_REQUEST_START;
+                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                    play->envCtx.stormState = STORM_STATE_ON;
+                }
+                Environment_PlayStormNatureAmbience(play);
+            break;
+            case WEATHER_EVENT_THUNDER:
+                play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
+                play->envCtx.stormRequest = STORM_REQUEST_START;
+                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                    play->envCtx.stormState = STORM_STATE_ON;
+                }
+                play->envCtx.lightningState = LIGHTNING_ON;
+                Environment_PlayStormNatureAmbience(play);
+            break;
+        }
+
+        if (envCtx->stormRequest != STORM_REQUEST_NONE) {
+        switch (envCtx->stormState) {
+            case STORM_STATE_OFF:
+                if ((envCtx->stormRequest == STORM_REQUEST_START) && !gSkyboxIsChanging) {
+                    envCtx->changeSkyboxState = CHANGE_SKYBOX_REQUESTED;
+                    envCtx->skyboxConfig = 0;
+                    envCtx->changeSkyboxNextConfig = 1;
+                    envCtx->changeSkyboxTimer = 1;
+                    envCtx->changeLightEnabled = true;
+                    envCtx->lightConfig = 0;
+                    envCtx->changeLightNextConfig = 2;
+                    gLightConfigAfterUnderwater = 2;
+                    envCtx->changeLightTimer = envCtx->changeDuration = 100;
+                    envCtx->stormState++;
+                }
+                break;
+
+            case STORM_STATE_ON:
+                if (!gSkyboxIsChanging && (envCtx->stormRequest == STORM_REQUEST_STOP)) {
+                    gWeatherMode = WEATHER_MODE_CLEAR;
+                    envCtx->changeSkyboxState = CHANGE_SKYBOX_REQUESTED;
+                    envCtx->skyboxConfig = 1;
+                    envCtx->changeSkyboxNextConfig = 0;
+                    envCtx->changeSkyboxTimer = 1;
+                    envCtx->changeLightEnabled = true;
+                    envCtx->lightConfig = 2;
+                    envCtx->changeLightNextConfig = 0;
+                    gLightConfigAfterUnderwater = 0;
+                    envCtx->changeLightTimer = envCtx->changeDuration = 100;
+                    envCtx->precipitation[PRECIP_RAIN_MAX] = 0;
+                    envCtx->stormRequest = STORM_REQUEST_NONE;
+                    envCtx->stormState = STORM_STATE_OFF;
+                }
+                break;
+        }
+    }
 }
 
 u8 Environment_SmoothStepToU8(u8* pvalue, u8 target, u8 scale, u8 step, u8 minStep) {
@@ -847,80 +938,13 @@ void Environment_UpdateSkybox(u8 skyboxId, EnvironmentContext* envCtx, SkyboxCon
         }
 #endif
 
-        if ((envCtx->skybox1Index != newSkybox1Index)/*  && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE) */) {
-            // envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE1_START;
-            /* size = gNormalSkyFiles[newSkybox1Index].file.vromEnd - gNormalSkyFiles[newSkybox1Index].file.vromStart;
-
-            osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
-            DMA_REQUEST_ASYNC(&envCtx->dmaRequest, skyboxCtx->staticSegments[0],
-                              gNormalSkyFiles[newSkybox1Index].file.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                              "../z_kankyo.c", 1264); */
+        if ((envCtx->skybox1Index != newSkybox1Index)) {
             envCtx->skybox1Index = newSkybox1Index;
         }
 
-        if ((envCtx->skybox2Index != newSkybox2Index)/*  && (envCtx->skyboxDmaState == SKYBOX_DMA_INACTIVE) */) {
-            // envCtx->skyboxDmaState = SKYBOX_DMA_TEXTURE2_START;
-            /* size = gNormalSkyFiles[newSkybox2Index].file.vromEnd - gNormalSkyFiles[newSkybox2Index].file.vromStart;
-
-            osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
-            DMA_REQUEST_ASYNC(&envCtx->dmaRequest, skyboxCtx->staticSegments[1],
-                              gNormalSkyFiles[newSkybox2Index].file.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                              "../z_kankyo.c", 1281); */
+        if ((envCtx->skybox2Index != newSkybox2Index)) {
             envCtx->skybox2Index = newSkybox2Index;
         }
-
-        /* if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_DONE) {
-            envCtx->skyboxDmaState = SKYBOX_DMA_TLUT1_START; */
-
-            /* if ((newSkybox1Index & 1) ^ ((newSkybox1Index & 4) >> 2)) {
-                size = gNormalSkyFiles[newSkybox1Index].palette.vromEnd -
-                       gNormalSkyFiles[newSkybox1Index].palette.vromStart;
-
-                osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
-                DMA_REQUEST_ASYNC(&envCtx->dmaRequest, skyboxCtx->palettes,
-                                  gNormalSkyFiles[newSkybox1Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                                  "../z_kankyo.c", 1307);
-            } else {
-                size = gNormalSkyFiles[newSkybox1Index].palette.vromEnd -
-                       gNormalSkyFiles[newSkybox1Index].palette.vromStart;
-                osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
-                DMA_REQUEST_ASYNC(&envCtx->dmaRequest, (u8*)skyboxCtx->palettes + size,
-                                  gNormalSkyFiles[newSkybox1Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                                  "../z_kankyo.c", 1320);
-            } */
-        /* } */
-
-        /* if (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_DONE) {
-            envCtx->skyboxDmaState = SKYBOX_DMA_TLUT2_START; */
-
-            /* if ((newSkybox2Index & 1) ^ ((newSkybox2Index & 4) >> 2)) {
-                size = gNormalSkyFiles[newSkybox2Index].palette.vromEnd -
-                       gNormalSkyFiles[newSkybox2Index].palette.vromStart;
-
-                osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
-                DMA_REQUEST_ASYNC(&envCtx->dmaRequest, skyboxCtx->palettes,
-                                  gNormalSkyFiles[newSkybox2Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                                  "../z_kankyo.c", 1342);
-            } else {
-                size = gNormalSkyFiles[newSkybox2Index].palette.vromEnd -
-                       gNormalSkyFiles[newSkybox2Index].palette.vromStart;
-                osCreateMesgQueue(&envCtx->loadQueue, &envCtx->loadMsg, 1);
-                DMA_REQUEST_ASYNC(&envCtx->dmaRequest, (u8*)skyboxCtx->palettes + size,
-                                  gNormalSkyFiles[newSkybox2Index].palette.vromStart, size, 0, &envCtx->loadQueue, NULL,
-                                  "../z_kankyo.c", 1355);
-            } */
-        /* } */
-
-        /* if ((envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE1_START) ||
-            (envCtx->skyboxDmaState == SKYBOX_DMA_TEXTURE2_START)) {
-            if (osRecvMesg(&envCtx->loadQueue, NULL, OS_MESG_NOBLOCK) == 0) {
-                envCtx->skyboxDmaState++;
-            }
-        } else if (envCtx->skyboxDmaState >= SKYBOX_DMA_TEXTURE1_DONE) {
-            if (osRecvMesg(&envCtx->loadQueue, NULL, OS_MESG_NOBLOCK) == 0) {
-                envCtx->skyboxDmaState = SKYBOX_DMA_INACTIVE;
-            }
-        } */
 
         envCtx->skyboxBlend = skyboxBlend;
     }
@@ -1525,7 +1549,6 @@ void Environment_SetupSkyboxStars(PlayState* play) {
     f32 phi_f0;
 
     if ((play->envCtx.changeSkyboxNextConfig == 0 || (play->envCtx.skyboxConfig == 0 && play->envCtx.changeSkyboxNextConfig == 0)) && (play->skyboxId == SKYBOX_NORMAL_SKY)) {
-        // rewrite this to start earlier and end later
         if ((gSaveContext.save.dayTime >= CLOCK_TIME(20, 30)) || (gSaveContext.save.dayTime < CLOCK_TIME(3, 0))) {
             phi_f0 = 1.0f;
         } else if (gSaveContext.save.dayTime > CLOCK_TIME(18, 30)) {
@@ -1535,16 +1558,6 @@ void Environment_SetupSkyboxStars(PlayState* play) {
         } else {
             phi_f0 = 0.0f;
         }
-
-        /* if ((gSaveContext.save.dayTime >= CLOCK_TIME(19, 0)) || (gSaveContext.save.dayTime < CLOCK_TIME(3, 0))) {
-            if (sStarAlpha < 1.0f) {
-                Math_StepToF(&sStarAlpha, 1.0f, 0.1f);
-            }
-        } else {
-            if (sStarAlpha > 0.0f) {
-                Math_StepToF(&sStarAlpha, 0.0f, 0.1f);
-            }
-        } */
 
         sStarAlpha = phi_f0;
         sEnvSkyboxNumStars = gSkyboxNumStars;
@@ -1842,15 +1855,6 @@ void Environment_UpdateClouds(PlayState* play) {
 // storm cloud
 void Environment_DrawCloudStorm(PlayState* play) {
     static u8 stormAlpha;
-    u32 filterA = 0;
-
-    // you can use this for regular fog if you want
-    /* if (play->lightCtx.fogNear < 980) {
-        filterA = (980 - play->lightCtx.fogNear) * (255.0f / 50);
-        if (filterA > 255) {
-            filterA = 255;
-        }
-    } */
 
     if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
         stormAlpha = CLAMP_MAX(stormAlpha + 5, 180);
@@ -1866,8 +1870,6 @@ void Environment_DrawCloudStorm(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
-    // POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1], play->lightCtx.fogColor[2], filterA, play->lightCtx.fogNear, 1000);
-
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], stormAlpha);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
@@ -1879,34 +1881,12 @@ void Environment_DrawCloudStorm(PlayState* play) {
               G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     gSPDisplayList(POLY_XLU_DISP++, skybox_storm_cloud);
 
-    // POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
-
     CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 }
 
 // cloud ring
 void Environment_DrawCloudHorizon(PlayState* play) {
-    // static u8 fogIntensity;
-
-    // play->envCtx.dirLight1.params.dir.color[0] etc is white for Hyrule Field adult fog state, causing it to look weird
-    /* if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
-        if (play->lightCtx.fogNear < 980) {
-            fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
-        } else {
-            fogIntensity = CLAMP_MAX(fogIntensity + 35, 200);
-        }
-    } else {
-        if (play->lightCtx.fogNear < 980) {
-            fogIntensity = CLAMP_MAX(fogIntensity + 35, 255);
-        } else {
-            fogIntensity = CLAMP_MIN(fogIntensity - 35, 0);
-        }
-    } */
-    
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
-
-    /* POLY_XLU_DISP = Gfx_SetFog(POLY_XLU_DISP, play->lightCtx.fogColor[0], play->lightCtx.fogColor[1],
-                               play->lightCtx.fogColor[2], fogIntensity, play->lightCtx.fogNear, 1000); */
 
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], 150);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
@@ -1963,17 +1943,8 @@ void Environment_DrawClouds(PlayState* play) {
         gSPDisplayList(POLY_XLU_DISP++, skybox_cloud);
     }
 
-    /* POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP); */
-
     CLOSE_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 219);
 }
-
-enum {
-    WEATHER_EVENT_SUNNY,
-    WEATHER_EVENT_CLOUDY,
-    WEATHER_EVENT_RAIN,
-    WEATHER_EVENT_THUNDER
-};
 
 typedef struct WeatherEvent {
     u16 startTime;
@@ -1994,11 +1965,7 @@ void Environment_CalculateWeather(PlayState* play) {
     if (Rand_ZeroOne() <= 0.75f && weatherModeTest == WEATHER_EVENT_SUNNY) { // hit weather event if it is sunny, it will be at least cloudy
         if (Rand_ZeroOne() <= 0.75f) { // rain/thunder, shorter schedule
             u8 randState = (u8)Rand_S16Offset(0, 3); // 0-2
-            /* if (randState == 0) {
-                Debug_Print(3, "hit rainy event");
-            } else {
-                Debug_Print(3, "hit thunder event");
-            } */
+
             for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
                 weatherSchedule[i].startTime = prevEndTime;
                 weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(3,0); // 3/6/9
@@ -2010,7 +1977,6 @@ void Environment_CalculateWeather(PlayState* play) {
                 }
             }
         } else { // cloudy day, longer schedule
-            Debug_Print(3, "hit cloudy day event");
             for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
                 weatherSchedule[i].startTime = prevEndTime;
                 weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(6,0); // 6/12/18
@@ -2019,7 +1985,6 @@ void Environment_CalculateWeather(PlayState* play) {
             }
         }
     } else { // sunny day, longer schedule, you could add some other clear skies events here or determine the amount of clouds
-        Debug_Print(3, "hit sunny day event");
         for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
             weatherSchedule[i].startTime = prevEndTime;
             weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(6,0); // 6/12/18
@@ -2034,8 +1999,8 @@ void Environment_CalculateWeather(PlayState* play) {
 /* 
 Notes: 
 - Nighttime is running faster, maybe change this
-- Investigate fog glitch and fix it
-- weather doesn't carry on to other scenes, try to fix this
+- Investigate fog glitch and fix it, does it even happen?
+- limit this system to scenes which don't use prerenders
  */
 
 void Environment_DynamicWeather(PlayState* play) {
@@ -2050,24 +2015,6 @@ void Environment_DynamicWeather(PlayState* play) {
         if (gSaveContext.skyboxTime >= weatherSchedule[i].startTime &&
             (gSaveContext.skyboxTime < weatherSchedule[i].endTime ||
             weatherSchedule[i].endTime == 0xFFFF || (weatherSchedule[i].startTime > weatherSchedule[i].endTime && gSaveContext.skyboxTime >= weatherSchedule[i].endTime))) {
-            /* Debug_Print(1, "state:%d", weatherSchedule[i].state);
-            Debug_Print_Draw(1, play); */
-
-            /* switch (weatherSchedule[i].state) {
-                case 0:
-                    Debug_Print(2, "sunny");
-                break;
-                case 1:
-                    Debug_Print(2, "cloudy");
-                break;
-                case 2:
-                    Debug_Print(2, "rain");
-                break;
-                case 3:
-                    Debug_Print(2, "thunder");
-                break;
-            }
-            Debug_Print_Draw(2, play); */
             break;
         }
     }
@@ -2080,6 +2027,7 @@ void Environment_DynamicWeather(PlayState* play) {
     if (weatherSchedule[i].state != weatherModeTest && weatherSchedule[i].state <= 3) {
         weatherModeTest = weatherSchedule[i].state;
 
+        // weather change test, copy paste of song of storms logic, rewrite this later
         switch (weatherModeTest) {
             case WEATHER_EVENT_SUNNY:
                 play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
@@ -2161,8 +2109,8 @@ void Environment_DynamicWeather(PlayState* play) {
 }
 
 void Environment_DrawSunAndMoon(PlayState* play) {
-    Debug_Print(8, "wstate:%d", weatherModeTest);
-    Debug_Print_Draw(8, play);
+    /* Debug_Print(8, "wmode:%d", gWeatherMode);
+    Debug_Print_Draw(8, play); */
 
     // This replace gMoonDL in gameplay_keep. TODO make this gMoonDL once asset replacement is sophisticated enough
     static Gfx sMoonDL[] = {
