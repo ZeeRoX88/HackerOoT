@@ -1979,7 +1979,7 @@ typedef struct WeatherEvent {
     u16 startTime;
     u16 endTime;
     u8 state; // 0 sunny, 1 cloudy, 2 rain, 3 thunderstorm
-} WeatherEvent; // size = 0xC
+} WeatherEvent;
 
 static WeatherEvent weatherSchedule[] = {
     {0,  CLOCK_TIME(23,0) + 1,  0xFF},
@@ -1991,22 +1991,22 @@ static WeatherEvent weatherSchedule[] = {
 void Environment_CalculateWeather(PlayState* play) {
     u16 prevEndTime = gSaveContext.save.dayTime;
 
-    if (Rand_ZeroOne() <= 0.75f && weatherModeTest == 0) { // hit weather event if it is sunny, it will be at least cloudy
+    if (Rand_ZeroOne() <= 0.75f && weatherModeTest == WEATHER_EVENT_SUNNY) { // hit weather event if it is sunny, it will be at least cloudy
         if (Rand_ZeroOne() <= 0.75f) { // rain/thunder, shorter schedule
-            u8 randState = (u8)(Rand_ZeroOne() + 1.9f);
-            if (randState == 0) {
+            u8 randState = (u8)Rand_S16Offset(0, 3); // 0-2
+            /* if (randState == 0) {
                 Debug_Print(3, "hit rainy event");
             } else {
                 Debug_Print(3, "hit thunder event");
-            }
+            } */
             for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
                 weatherSchedule[i].startTime = prevEndTime;
                 weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(3,0); // 3/6/9
                 prevEndTime = weatherSchedule[i].endTime;
                 if (i == 1) {
-                    weatherSchedule[i].state = 1 + randState;
+                    weatherSchedule[i].state = WEATHER_EVENT_CLOUDY + randState;
                 } else {
-                    weatherSchedule[i].state = 1; // cloudy
+                    weatherSchedule[i].state = WEATHER_EVENT_CLOUDY; // cloudy
                 }
             }
         } else { // cloudy day, longer schedule
@@ -2015,7 +2015,7 @@ void Environment_CalculateWeather(PlayState* play) {
                 weatherSchedule[i].startTime = prevEndTime;
                 weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(6,0); // 6/12/18
                 prevEndTime = weatherSchedule[i].endTime;
-                weatherSchedule[i].state = 1; // 1 is cloudy
+                weatherSchedule[i].state = WEATHER_EVENT_CLOUDY; // 1 is cloudy
             }
         }
     } else { // sunny day, longer schedule, you could add some other clear skies events here or determine the amount of clouds
@@ -2024,7 +2024,7 @@ void Environment_CalculateWeather(PlayState* play) {
             weatherSchedule[i].startTime = prevEndTime;
             weatherSchedule[i].endTime = prevEndTime + CLOCK_TIME(6,0); // 6/12/18
             prevEndTime = weatherSchedule[i].endTime;
-            weatherSchedule[i].state = 0; // 0 is sunny
+            weatherSchedule[i].state = WEATHER_EVENT_SUNNY; // 0 is sunny
         }
     }
     weatherSchedule[3].startTime = prevEndTime;
@@ -2035,12 +2035,13 @@ void Environment_CalculateWeather(PlayState* play) {
 Notes: 
 - Nighttime is running faster, maybe change this
 - Investigate fog glitch and fix it
+- weather doesn't carry on to other scenes, try to fix this
  */
 
 void Environment_DynamicWeather(PlayState* play) {
     u8 i = 0;
-    s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
-    s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60;
+    /* s16 testHour = (gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) / 60.0f;
+    s16 testMin = (s16)(gSaveContext.save.dayTime * (24.0f * 60.0f / 0x10000)) % 60; */
 
     /* Debug_Print(0, "ztime:%02d:%02d", testHour, testMin);
     Debug_Print_Draw(0, play); */
@@ -2123,8 +2124,6 @@ void Environment_DynamicWeather(PlayState* play) {
             break;
         }
     }
-
-
 
     /* Debug_Print_Draw(3, play);
 
