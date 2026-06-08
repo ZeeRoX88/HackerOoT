@@ -1546,11 +1546,11 @@ void Play_Draw(PlayState* this) {
                 if ((this->skyboxId == SKYBOX_NORMAL_SKY) || (this->skyboxId == SKYBOX_CUTSCENE_MAP) || this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
                     if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
                         Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
+                        if ((this->gameplayFrames % 200) == 0) {
+                            Environment_DynamicWeather(this);
+                        }
                     }
                     Environment_DrawSkybox(this);
-                    if ((this->gameplayFrames % 200) == 0) {
-                        Environment_DynamicWeather(this);
-                    }
                 }
             }
         }

@@ -349,6 +349,91 @@ void Environment_GraphCallback(GraphicsContext* gfxCtx, void* param) {
     Lights_GlowCheck(play);
 }
 
+void Environment_WeatherInitTest(PlayState* play) {
+    // test weather init, rewrite this later
+    // problem: gweathermode and storm request act independently and block the other one depending which system acts first
+    switch (weatherModeTest) {
+        case WEATHER_EVENT_SUNNY:
+            play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
+            if (play->csCtx.state == CS_STATE_IDLE) {
+                Environment_StopStormNatureAmbience(play);
+            } else if (Audio_GetActiveSeqId(SEQ_PLAYER_BGM_MAIN) == NA_BGM_NATURE_AMBIENCE) {
+                Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_LIGHTNING, CHANNEL_IO_PORT_1, 0);
+                Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_RAIN, CHANNEL_IO_PORT_1, 0);
+            }
+            if (gWeatherMode == WEATHER_MODE_CLEAR && (play->envCtx.stormRequest == STORM_REQUEST_START)) {
+                play->envCtx.stormRequest = STORM_REQUEST_STOP;
+            } else {
+                play->envCtx.stormRequest = STORM_REQUEST_NONE;
+                play->envCtx.stormState = STORM_STATE_OFF;
+            }
+            play->envCtx.lightningState = LIGHTNING_OFF;
+        break;
+        case WEATHER_EVENT_CLOUDY:
+            play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
+            play->envCtx.stormRequest = STORM_REQUEST_START;
+            if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                play->envCtx.stormState = STORM_STATE_ON;
+            }
+            play->envCtx.lightningState = LIGHTNING_OFF;
+        break;
+        case WEATHER_EVENT_RAIN:
+            play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
+            play->envCtx.stormRequest = STORM_REQUEST_START;
+            if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                play->envCtx.stormState = STORM_STATE_ON;
+            }
+            Environment_PlayStormNatureAmbience(play);
+        break;
+        case WEATHER_EVENT_THUNDER:
+            play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
+            play->envCtx.stormRequest = STORM_REQUEST_START;
+            if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
+                play->envCtx.stormState = STORM_STATE_ON;
+            }
+            play->envCtx.lightningState = LIGHTNING_ON;
+            Environment_PlayStormNatureAmbience(play);
+        break;
+    }
+
+    if (play->envCtx.stormRequest != STORM_REQUEST_NONE) {
+        switch (play->envCtx.stormState) {
+            case STORM_STATE_OFF:
+                if ((play->envCtx.stormRequest == STORM_REQUEST_START) && !gSkyboxIsChanging) {
+                    play->envCtx.changeSkyboxState = CHANGE_SKYBOX_REQUESTED;
+                    play->envCtx.skyboxConfig = 0;
+                    play->envCtx.changeSkyboxNextConfig = 1;
+                    play->envCtx.changeSkyboxTimer = 1;
+                    play->envCtx.changeLightEnabled = true;
+                    play->envCtx.lightConfig = 0;
+                    play->envCtx.changeLightNextConfig = 2;
+                    gLightConfigAfterUnderwater = 2;
+                    play->envCtx.changeLightTimer = play->envCtx.changeDuration = 1;
+                    play->envCtx.stormState++;
+                }
+                break;
+
+            case STORM_STATE_ON:
+                if (!gSkyboxIsChanging && (play->envCtx.stormRequest == STORM_REQUEST_STOP)) {
+                    gWeatherMode = WEATHER_MODE_CLEAR;
+                    play->envCtx.changeSkyboxState = CHANGE_SKYBOX_REQUESTED;
+                    play->envCtx.skyboxConfig = 1;
+                    play->envCtx.changeSkyboxNextConfig = 0;
+                    play->envCtx.changeSkyboxTimer = 1;
+                    play->envCtx.changeLightEnabled = true;
+                    play->envCtx.lightConfig = 2;
+                    play->envCtx.changeLightNextConfig = 0;
+                    gLightConfigAfterUnderwater = 0;
+                    play->envCtx.changeLightTimer = play->envCtx.changeDuration = 1;
+                    play->envCtx.precipitation[PRECIP_RAIN_MAX] = 0;
+                    play->envCtx.stormRequest = STORM_REQUEST_NONE;
+                    play->envCtx.stormState = STORM_STATE_OFF;
+                }
+                break;
+        }
+    }
+}
+
 void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) {
     u8 i;
     PlayState* play = play2;
@@ -559,87 +644,8 @@ void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) 
     gCustomLensFlareOn = false;
     Rumble_Reset();
 
-    // test weather init, rewrite this later
-    // problem: gweathermode and storm request act independently and block the other one depending which system acts first
-    switch (weatherModeTest) {
-            case WEATHER_EVENT_SUNNY:
-                play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
-                if (play->csCtx.state == CS_STATE_IDLE) {
-                    Environment_StopStormNatureAmbience(play);
-                } else if (Audio_GetActiveSeqId(SEQ_PLAYER_BGM_MAIN) == NA_BGM_NATURE_AMBIENCE) {
-                    Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_LIGHTNING, CHANNEL_IO_PORT_1, 0);
-                    Audio_SetNatureAmbienceChannelIO(NATURE_CHANNEL_RAIN, CHANNEL_IO_PORT_1, 0);
-                }
-                if (gWeatherMode == WEATHER_MODE_CLEAR && (play->envCtx.stormRequest == STORM_REQUEST_START)) {
-                    play->envCtx.stormRequest = STORM_REQUEST_STOP;
-                } else {
-                    play->envCtx.stormRequest = STORM_REQUEST_NONE;
-                    play->envCtx.stormState = STORM_STATE_OFF;
-                }
-                play->envCtx.lightningState = LIGHTNING_OFF;
-            break;
-            case WEATHER_EVENT_CLOUDY:
-                play->envCtx.precipitation[PRECIP_SOS_MAX] = 0;
-                play->envCtx.stormRequest = STORM_REQUEST_START;
-                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
-                    play->envCtx.stormState = STORM_STATE_ON;
-                }
-                play->envCtx.lightningState = LIGHTNING_OFF;
-            break;
-            case WEATHER_EVENT_RAIN:
-                play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
-                play->envCtx.stormRequest = STORM_REQUEST_START;
-                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
-                    play->envCtx.stormState = STORM_STATE_ON;
-                }
-                Environment_PlayStormNatureAmbience(play);
-            break;
-            case WEATHER_EVENT_THUNDER:
-                play->envCtx.precipitation[PRECIP_SOS_MAX] = 20;
-                play->envCtx.stormRequest = STORM_REQUEST_START;
-                if ((gWeatherMode != WEATHER_MODE_CLEAR) || play->envCtx.skyboxConfig != 0) {
-                    play->envCtx.stormState = STORM_STATE_ON;
-                }
-                play->envCtx.lightningState = LIGHTNING_ON;
-                Environment_PlayStormNatureAmbience(play);
-            break;
-        }
-
-        if (envCtx->stormRequest != STORM_REQUEST_NONE) {
-        switch (envCtx->stormState) {
-            case STORM_STATE_OFF:
-                if ((envCtx->stormRequest == STORM_REQUEST_START) && !gSkyboxIsChanging) {
-                    envCtx->changeSkyboxState = CHANGE_SKYBOX_REQUESTED;
-                    envCtx->skyboxConfig = 0;
-                    envCtx->changeSkyboxNextConfig = 1;
-                    envCtx->changeSkyboxTimer = 1;
-                    envCtx->changeLightEnabled = true;
-                    envCtx->lightConfig = 0;
-                    envCtx->changeLightNextConfig = 2;
-                    gLightConfigAfterUnderwater = 2;
-                    envCtx->changeLightTimer = envCtx->changeDuration = 100;
-                    envCtx->stormState++;
-                }
-                break;
-
-            case STORM_STATE_ON:
-                if (!gSkyboxIsChanging && (envCtx->stormRequest == STORM_REQUEST_STOP)) {
-                    gWeatherMode = WEATHER_MODE_CLEAR;
-                    envCtx->changeSkyboxState = CHANGE_SKYBOX_REQUESTED;
-                    envCtx->skyboxConfig = 1;
-                    envCtx->changeSkyboxNextConfig = 0;
-                    envCtx->changeSkyboxTimer = 1;
-                    envCtx->changeLightEnabled = true;
-                    envCtx->lightConfig = 2;
-                    envCtx->changeLightNextConfig = 0;
-                    gLightConfigAfterUnderwater = 0;
-                    envCtx->changeLightTimer = envCtx->changeDuration = 100;
-                    envCtx->precipitation[PRECIP_RAIN_MAX] = 0;
-                    envCtx->stormRequest = STORM_REQUEST_NONE;
-                    envCtx->stormState = STORM_STATE_OFF;
-                }
-                break;
-        }
+    if (play->skyboxCtx.drawType == SKYBOX_DRAW_128) {
+        Environment_WeatherInitTest(play);
     }
 }
 
