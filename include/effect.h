@@ -343,7 +343,8 @@ void EffectSsKiraKira_SpawnDispersed(struct PlayState* play, Vec3f* pos, Vec3f* 
                                      Color_RGBA8* primColor, Color_RGBA8* envColor, s16 scale, s32 life);
 void EffectSsKiraKira_SpawnFocused(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel,
                                    Color_RGBA8* primColor, Color_RGBA8* envColor, s16 scale, s32 life);
-void EffectSsBomb_Spawn(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel);
+void EffectSsBomb_Spawn(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel,
+                        Color_RGBA8* primColor, s16 scale, s16 scaleStep, s16 life, s16 rotation, s16 lighting, s16 type);
 void EffectSsBomb2_SpawnFade(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel);
 void EffectSsBomb2_SpawnLayered(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale,
                                 s16 scaleStep);

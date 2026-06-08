@@ -1990,7 +1990,7 @@ void Player_ProcessAnimSfxList(Player* this, AnimSfxEntry* entry) {
                 Player_PlayVoiceSfx(this, entry->sfxId);
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_LANDING)) {
                 Player_PlayLandingSfx(this);
-            } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_RUNNING)) {
+            } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_RUNNING)) { // put dust and grass spawner here!
                 Player_PlaySteppingSfx(this, 6.0f);
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_JUMPING)) {
                 Player_PlayJumpingSfx(this);
@@ -8938,6 +8938,7 @@ void func_8084260C(Vec3f* src, Vec3f* dest, f32 arg2, f32 arg3, f32 arg4) {
 static Vec3f D_808545B4 = { 0.0f, 0.0f, 0.0f };
 static Vec3f D_808545C0 = { 0.0f, 0.0f, 0.0f };
 
+// spawn rolling dust, put grass here as well
 s32 func_8084269C(PlayState* play, Player* this) {
     Vec3f sp2C;
 
@@ -9571,6 +9572,38 @@ void func_8084409C(PlayState* play, Player* this, f32 speedXZ, f32 velocityY) {
     }
 }
 
+void Player_SpawnVelocityDust(PlayState* play, Actor* actor, s32 amountMinusOne,
+                              f32 randAccelWeight, s16 scale, s16 scaleStep, s16 direction) {
+    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 255 };
+    Vec3f pos;
+    Vec3f velocity = { 0.0f, 0.0f, 0.0f };
+    Vec3f accel = { 0.0f, 0.2f, 0.0f };
+    s16 angle;
+    s32 i;
+    s16 rotation;
+
+    if (direction == 1) {
+        angle = actor->shape.rot.y + 0x4000;
+        rotation = 0;
+    } else if (direction == 3) {
+        angle = actor->shape.rot.y - 0x4000;
+        rotation = 1;
+    }
+    pos.y = actor->floorHeight + 1.0f;
+    accel.y += (Rand_ZeroOne() - 0.5f) * 0.1f;
+
+    for (i = amountMinusOne; i >= 0; i--) {
+        pos.x = Math_SinS(angle) * 15.0f + actor->world.pos.x;
+        pos.z = Math_CosS(angle) * 15.0f + actor->world.pos.z;
+        accel.x = 2.5f * Math_SinS(angle) + Rand_ZeroOne() * randAccelWeight;
+        accel.z = 2.5f * Math_CosS(angle) + Rand_ZeroOne() * randAccelWeight;
+
+        EffectSsBomb_Spawn(play, &pos, &velocity, &accel, &effectPrimColor, 10, 40, 10, rotation, 1, 1);
+
+        angle += 0x600;
+    }
+}
+
 void Player_Action_8084411C(Player* this, PlayState* play) {
     f32 speedTarget;
     s16 yawTarget;
@@ -9652,6 +9685,12 @@ void Player_Action_8084411C(Player* this, PlayState* play) {
     } else {
         LinkAnimationHeader* anim = GET_PLAYER_ANIM(PLAYER_ANIMGROUP_landing, this->modelAnimType);
         s32 sp3C;
+
+        if (this->av1.actionVar1 != 0 && this->av1.actionVar1 != 2) { // 1 left, 2 back, 3 right, 0 normak
+            Player_SpawnVelocityDust(play, &this->actor, 2, 2.0f, 0, 0, this->av1.actionVar1);
+        } else { // front
+            Actor_SpawnOkamiFloorDustRing(play, &this->actor, &this->actor.world.pos, 5.0f, 7, 0.0f, 0, 0, true);
+        }
 
         if (this->stateFlags2 & PLAYER_STATE2_19) {
             if (Player_CheckHostileLockOn(this)) {

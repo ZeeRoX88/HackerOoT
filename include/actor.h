@@ -809,4 +809,7 @@ u16 func_80037C30(struct PlayState* play, s16 arg1);
 s32 func_80037D98(struct PlayState* play, Actor* actor, s32 arg2, s32* arg3);
 s32 Actor_TrackPlayer(struct PlayState* play, Actor* actor, Vec3s* headRot, Vec3s* torsoRot, Vec3f focusPos);
 
+void Actor_SpawnOkamiFloorDustRing(struct PlayState* play, Actor* actor, Vec3f* posXZ, f32 radius, s32 amountMinusOne,
+                              f32 randAccelWeight, s16 scale, s16 scaleStep, u8 useLighting);
+
 #endif

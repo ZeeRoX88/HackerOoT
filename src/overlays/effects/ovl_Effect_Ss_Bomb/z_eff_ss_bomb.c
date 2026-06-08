@@ -18,11 +18,24 @@
 #include "skin_matrix.h"
 
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
+#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 
-#define EFFSSBOMB_LIFESPAN 20
+#define rPrimColorR regs[0]
+#define rPrimColorG regs[1]
+#define rPrimColorB regs[2]
+#define rPrimColorA regs[3]
 
-#define rScale regs[0]
-#define rTexIndex regs[1]
+#define rLighting regs[4]
+
+#define rEnvColorG regs[5]
+#define rEnvColorB regs[6]
+#define rEnvColorA regs[7]
+
+#define rRotationDirection regs[8]
+#define rScale regs[9]
+#define rScaleStep regs[10]
+#define rRotation regs[11]
+#define rLifespan regs[12]
 
 u32 EffectSsBomb_Init(PlayState* play, u32 index, EffectSs* this, void* initParamsx);
 void EffectSsBomb_Draw(PlayState* play, u32 index, EffectSs* this);
@@ -39,76 +52,68 @@ u32 EffectSsBomb_Init(PlayState* play, u32 index, EffectSs* this, void* initPara
     Math_Vec3f_Copy(&this->pos, &initParams->pos);
     Math_Vec3f_Copy(&this->velocity, &initParams->velocity);
     Math_Vec3f_Copy(&this->accel, &initParams->accel);
-    this->gfx = SEGMENTED_TO_VIRTUAL(gEffBombExplosion1DL);
-    this->life = EFFSSBOMB_LIFESPAN;
-    this->draw = EffectSsBomb_Draw;
+    this->life = initParams->life;
     this->update = EffectSsBomb_Update;
-    this->rScale = 100;
-    this->rTexIndex = 0;
+    this->draw = EffectSsBomb_Draw;
+    this->type = initParams->type;
+
+    this->rPrimColorR = initParams->primColor.r;
+    this->rPrimColorG = initParams->primColor.g;
+    this->rPrimColorB = initParams->primColor.b;
+    this->rLighting = initParams->lighting;
+
+    this->rPrimColorA = initParams->primColor.a;
+    this->rScale = initParams->scale;
+    this->rScaleStep = initParams->scaleStep;
+    this->rLifespan = initParams->life;
+    this->rRotation = 0;
+    this->rRotationDirection = initParams->rotation;
 
     return 1;
 }
 
-static void* sExplosionTextures[] = {
-    gEffBombExplosion1Tex,
-    gEffBombExplosion2Tex,
-    gEffBombExplosion3Tex,
-    gEffBombExplosion4Tex,
-};
-
 void EffectSsBomb_Draw(PlayState* play, u32 index, EffectSs* this) {
-    GraphicsContext* gfxCtx = play->state.gfxCtx;
-    MtxF mfTrans;
-    MtxF mfScale;
-    MtxF mfResult;
-    MtxF mfTransBillboard;
-    Mtx* mtx;
-    s32 pad;
     f32 scale;
-    s16 intensity;
-    IF_F3DEX3_DONT_SKIP_TEX_INIT();
-
-    if (1) {}
+    GraphicsContext* gfxCtx = play->state.gfxCtx;
 
     OPEN_DISPS(gfxCtx, "../z_eff_ss_bomb.c", 168);
 
-    scale = this->rScale / 100.0f;
+    scale = this->rScale * 0.0025f;
+    Matrix_Translate(this->pos.x, this->pos.y, this->pos.z, MTXMODE_NEW);
+    Matrix_Scale(scale, scale, 1.0f, MTXMODE_APPLY);
+    Matrix_ReplaceRotation(&play->billboardMtxF);
+    Matrix_RotateZ(BINANG_TO_RAD(this->rRotation), MTXMODE_APPLY);
+    MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx, "../z_kankyo.c", 2364);
 
-    SkinMatrix_SetTranslate(&mfTrans, this->pos.x, this->pos.y, this->pos.z);
-    SkinMatrix_SetScale(&mfScale, scale, scale, 1.0f);
-    if (1) {}
-    SkinMatrix_MtxFMtxFMult(&mfTrans, &play->billboardMtxF, &mfTransBillboard);
-    SkinMatrix_MtxFMtxFMult(&mfTransBillboard, &mfScale, &mfResult);
-
-    gSPMatrix(POLY_XLU_DISP++, &gIdentityMtx, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-
-    mtx = SkinMatrix_MtxFToNewMtx(gfxCtx, &mfResult);
-
-    if (mtx != NULL) {
-        gSPMatrix(POLY_XLU_DISP++, mtx, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-        gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(sExplosionTextures[this->rTexIndex]));
-        IF_F3DEX3_DONT_SKIP_TEX_HERE(POLY_XLU_DISP++, this->rTexIndex);
-        gDPPipeSync(POLY_XLU_DISP++);
-        Gfx_SetupDL_61Xlu(gfxCtx);
-        intensity = this->life * ((f32)255 / EFFSSBOMB_LIFESPAN);
-        gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, intensity, intensity, intensity, intensity);
-        gDPPipeSync(POLY_XLU_DISP++);
-        //! @bug env color is not set but used in gEffBombExplosion1DL
-        gSPDisplayList(POLY_XLU_DISP++, this->gfx);
-        gDPPipeSync(POLY_XLU_DISP++);
+    if (this->rLighting == 0) { // lighting off
+        gDPSetCombineLERP(POLY_XLU_DISP++, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, COMBINED, 0, PRIMITIVE, 0, COMBINED, 0, PRIMITIVE, 0);
+    } else { // lighting on
+        gDPSetCombineLERP(POLY_XLU_DISP++, TEXEL0, 0, SHADE, 0, 0, 0, 0, TEXEL0, COMBINED, 0, PRIMITIVE, 0, COMBINED, 0, PRIMITIVE, 0);
     }
+
+    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->rPrimColorR, this->rPrimColorG, this->rPrimColorB, this->rPrimColorA);
+    // gDPSetEnvColor(POLY_XLU_DISP++, this->rEnvColorR, this->rEnvColorG, this->rEnvColorB, this->rEnvColorA);
+    gSPDisplayList(POLY_XLU_DISP++, gOEffDustDL);
 
     CLOSE_DISPS(gfxCtx, "../z_eff_ss_bomb.c", 214);
 }
 
 void EffectSsBomb_Update(PlayState* play, u32 index, EffectSs* this) {
-    if ((this->life <= EFFSSBOMB_LIFESPAN) && (this->life > (EFFSSBOMB_LIFESPAN - ARRAY_COUNT(sExplosionTextures)))) {
-        this->rTexIndex = (EFFSSBOMB_LIFESPAN - this->life);
+    this->accel.x = (Rand_ZeroOne() * 0.4f) - 0.2f;
+    this->accel.z = (Rand_ZeroOne() * 0.4f) - 0.2f;
+
+    if (this->type == 1 && (this->life < (this->rLifespan >> 1) /* this->rLifespan / 2 */)) {
+        this->rScale -= CLAMP_MIN(this->rScaleStep, 0);
     } else {
-        this->rScale += 0;
-        this->rTexIndex = ARRAY_COUNT(sExplosionTextures) - 1;
+        this->rScale += this->rScaleStep;
     }
 
-    this->accel.x = ((Rand_ZeroOne() * 0.4f) - 0.2f);
-    this->accel.z = ((Rand_ZeroOne() * 0.4f) - 0.2f);
+    if (this->rRotationDirection == 0) {
+        this->rRotation += 0x700;
+    } else {
+        this->rRotation -= 0x700;
+    }
+    if (this->life < (this->rLifespan >> 1)/* this->rLifespan / 2 */) {
+        this->rPrimColorA = CLAMP_MIN(this->rPrimColorA - (255 / (this->rLifespan >> 1)), 0);
+    }
 }

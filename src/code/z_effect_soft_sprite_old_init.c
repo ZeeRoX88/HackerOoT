@@ -290,13 +290,21 @@ void EffectSsKiraKira_SpawnFocused(PlayState* play, Vec3f* pos, Vec3f* velocity,
 
 // EffectSsBomb Spawn Functions
 
-// unused
-void EffectSsBomb_Spawn(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel) {
+// Okami Dust Cloud - rot 0 is left, rot 1 is right, type 0 is scale up and fade, type 1 is scale up, down and fade, lighting 0 is off and 1 is on, add types that don't fade out
+void EffectSsBomb_Spawn(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel,
+                        Color_RGBA8* primColor, s16 scale, s16 scaleStep, s16 life, s16 rotation, s16 lighting, s16 type) {
     EffectSsBombInitParams initParams;
 
     Math_Vec3f_Copy(&initParams.pos, pos);
     Math_Vec3f_Copy(&initParams.velocity, velocity);
     Math_Vec3f_Copy(&initParams.accel, accel);
+    initParams.primColor = *primColor;
+    initParams.lighting = lighting;
+    initParams.type = type;
+    initParams.scale = scale;
+    initParams.scaleStep = scaleStep;
+    initParams.life = life;
+    initParams.rotation = rotation;
 
     EffectSs_Spawn(play, EFFECT_SS_BOMB, 128, &initParams);
 }
