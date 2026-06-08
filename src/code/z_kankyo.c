@@ -2128,18 +2128,12 @@ void Environment_DrawSunAndMoon(PlayState* play) {
     // This replace gMoonDL in gameplay_keep. TODO make this gMoonDL once asset replacement is sophisticated enough
     static Gfx sMoonDL[] = {
         gsSPMatrix(0x01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW),
-        gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
         // gsSPLoadGeometryMode(G_CULL_BACK),
         gsDPSetCombineLERP(PRIMITIVE, ENVIRONMENT, TEXEL0, ENVIRONMENT, PRIMITIVE, 0, TEXEL0, 0, 0, 0, 0, COMBINED, 0,
                            0, 0, COMBINED),
         gsDPSetOtherMode(G_AD_NOTPATTERN | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE | G_TL_TILE |
                              G_TD_CLAMP | G_TP_PERSP | G_CYC_2CYCLE | G_PM_NPRIMITIVE,
                          G_AC_THRESHOLD | G_ZS_PIXEL | G_RM_FOG_PRIM_A | G_RM_XLU_SURF2),
-        gsDPLoadTextureBlock(0x08000000, G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
-                             G_TX_MIRROR | G_TX_WRAP, 6, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD),
-        gsDPSetTileSize(G_TX_RENDERTILE, 256, 0, // switcher between 256 and 0
-        ((64)  - 1) << G_TEXTURE_IMAGE_FRAC,
-        ((64) - 1) << G_TEXTURE_IMAGE_FRAC),
         gsSPVertex(&moonVtx[0], 4, 0),
         gsSP2Triangles(0, 1, 2, 0, 1, 3, 2, 0),
         gsSPEndDisplayList(),
@@ -2234,13 +2228,11 @@ void Environment_DrawSunAndMoon(PlayState* play) {
         alpha = temp * 255.0f;
 
         if (alpha > 0 && (gSaveContext.save.totalDays % 8) != 4) {
-            static void* moonTexs[] = {gMoonTex, gMoonPhase03Tex, gMoonPhase02Tex, gMoonPhase01Tex, NULL, gMoonPhase01Tex, gMoonPhase02Tex, gMoonPhase03Tex};
-            u8 moonPhase;
+            static void* moonTexs[] = {gMoonTex, gMoonPhase01Tex, gMoonPhase02Tex, gMoonPhase03Tex, NULL, gMoonPhase03Tex, gMoonPhase02Tex, gMoonPhase01Tex};
+            u8 moonPhase = gSaveContext.save.totalDays % 8;
 
-            moonPhase = gSaveContext.save.totalDays % 8;
-
-            Debug_Print(0, "%d", moonPhase);
-            Debug_Print_Draw(0, play);
+            /* Debug_Print(0, "%d", moonPhase);
+            Debug_Print_Draw(0, play); */
 
             //if moon is at a certain y height, start to lerp between skybox colors
 
@@ -2249,9 +2241,15 @@ void Environment_DrawSunAndMoon(PlayState* play) {
             gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, alpha);
             gDPSetEnvColor(POLY_OPA_DISP++, play->skyboxCtx.skyboxTopColor[0], play->skyboxCtx.skyboxTopColor[1], play->skyboxCtx.skyboxTopColor[2], alpha);
             gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(moonTexs[moonPhase]));
-            if (/* (gSaveContext.save.totalDays % 8) > 4 */1) {
-                
-            }
+
+            s16 moonUls = ((gSaveContext.save.totalDays % 8) > 4) ? 255 : 0;
+
+            gSPTexture(POLY_OPA_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
+            gDPLoadTextureBlock(POLY_OPA_DISP++, 0x08000000, G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
+                             G_TX_MIRROR | G_TX_WRAP, 6, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
+            gDPSetTileSize(POLY_OPA_DISP++, G_TX_RENDERTILE, moonUls, 0,
+                           ((64)  - 1) << G_TEXTURE_IMAGE_FRAC,
+                           ((64) - 1) << G_TEXTURE_IMAGE_FRAC);
             gSPDisplayList(POLY_OPA_DISP++, sMoonDL);
         }
     }

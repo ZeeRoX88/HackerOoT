@@ -4,6 +4,10 @@
 #include "assets/objects/gameplay_hacker_keep/bottle.c"
 #endif
 
+/* u64 gMoonPhase00Tex[] = {
+#include "assets/objects/gameplay_hacker_keep/moon_00.ia8.inc.c"
+}; */
+
 u64 gMoonPhase01Tex[] = {
 #include "assets/objects/gameplay_hacker_keep/moon_01.ia8.inc.c"
 };

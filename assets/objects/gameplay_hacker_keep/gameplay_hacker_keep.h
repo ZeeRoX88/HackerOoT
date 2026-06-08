@@ -6,6 +6,7 @@
 extern Gfx gBottleContentsDL[];
 extern Gfx gBottleGlassDL[];
 
+/* extern u64 gMoonPhase00Tex[]; */
 extern u64 gMoonPhase01Tex[];
 extern u64 gMoonPhase02Tex[];
 extern u64 gMoonPhase03Tex[];
