@@ -2115,9 +2115,7 @@ void Environment_DynamicWeather(PlayState* play) {
 }
 
 void Environment_DrawSunAndMoon(PlayState* play) {
-    /* Debug_Print(8, "wmode:%d", gWeatherMode);
-    Debug_Print_Draw(8, play); */
-
+    // new moon vertices
     static Vtx moonVtx[] = {
         VTX(   -16,    -16,      0,     0x0,     0x0, 0xFF, 0xFF, 0xFF, 0xFF),
         VTX(    16,    -16,      0,  0x800,     0x0, 0xFF, 0xFF, 0xFF, 0xFF),
@@ -2138,28 +2136,15 @@ void Environment_DrawSunAndMoon(PlayState* play) {
         gsSP2Triangles(0, 1, 2, 0, 1, 3, 2, 0),
         gsSPEndDisplayList(),
     };
-    /* static Gfx sMoon2DL[] = {
-        gsSPMatrix(0x01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW),
-        gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
-        gsSPLoadGeometryMode(G_CULL_BACK),
-        gsDPSetCombineLERP(PRIMITIVE, TEXEL0, TEXEL1, ENVIRONMENT, PRIMITIVE, 0, TEXEL0, 0, 0, 0, 0, COMBINED, 0,
-                           0, 0, COMBINED),
-        gsDPSetOtherMode(G_AD_NOTPATTERN | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE | G_TL_TILE |
-                             G_TD_CLAMP | G_TP_PERSP | G_CYC_2CYCLE | G_PM_NPRIMITIVE,
-                         G_AC_THRESHOLD | G_ZS_PIXEL | G_RM_FOG_PRIM_A | G_RM_XLU_SURF2),
-        gsDPLoadTextureBlock_4b(gMoonFullTex, G_IM_FMT_IA, 64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
-                             G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD),
-        gsDPLoadMultiBlock_4b(gMoonPhase01Tex, 0x0100, 1, G_IM_FMT_I, 32, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
-                          G_TX_NOMIRROR | G_TX_WRAP, 5, 5, 1, 1),
-        gsSPVertex(&gMoonVtx[0], 4, 0),
-        gsSP2Triangles(0, 1, 2, 0, 1, 3, 2, 0),
-        gsSPEndDisplayList(),
-    }; */
+
     s32 alpha;
     f32 color;
     f32 y;
     f32 scale;
     f32 temp;
+
+    /* Debug_Print(8, "wmode:%d", gWeatherMode);
+    Debug_Print_Draw(8, play); */
 
     OPEN_DISPS(play->state.gfxCtx, "../z_kankyo.c", 2266);
 
