@@ -66,7 +66,7 @@ u32 EffectSsBomb_Init(PlayState* play, u32 index, EffectSs* this, void* initPara
     this->rScale = initParams->scale;
     this->rScaleStep = initParams->scaleStep;
     this->rLifespan = initParams->life;
-    this->rRotation = 0;
+    this->rRotation = (s16)(Rand_Next() >> 16); // random initial rotation
     this->rRotationDirection = initParams->rotation;
 
     return 1;
@@ -109,11 +109,11 @@ void EffectSsBomb_Update(PlayState* play, u32 index, EffectSs* this) {
     }
 
     if (this->rRotationDirection == 0) {
-        this->rRotation += 0x700;
+        this->rRotation += 0x900;
     } else {
-        this->rRotation -= 0x700;
+        this->rRotation -= 0x900;
     }
-    if (this->life < (this->rLifespan >> 1)/* this->rLifespan / 2 */) {
-        this->rPrimColorA = CLAMP_MIN(this->rPrimColorA - (255 / (this->rLifespan >> 1)), 0);
-    }
+    // if (this->life < (this->rLifespan >> 1)/* this->rLifespan / 2 */) {
+    //     this->rPrimColorA = CLAMP_MIN(this->rPrimColorA - (255 / (this->rLifespan >> 1)), 0);
+    // }
 }

@@ -1992,6 +1992,10 @@ void Player_ProcessAnimSfxList(Player* this, AnimSfxEntry* entry) {
                 Player_PlayLandingSfx(this);
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_RUNNING)) { // put dust and grass spawner here!
                 Player_PlaySteppingSfx(this, 6.0f);
+                //
+                /* if (1) {
+                    Player_SpawnGrassBlade(play, &this->actor.shape.feetPos[FOOT_LEFT], &D_808545B4, &D_808545C0, 50, 30);
+                } */
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_JUMPING)) {
                 Player_PlayJumpingSfx(this);
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_WALKING)) {
@@ -8929,6 +8933,13 @@ void Player_Action_8084251C(Player* this, PlayState* play) {
     }
 }
 
+void Player_SpawnGrassBlade(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale, s16 scaleStep) {
+    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 100 };
+    u8 rotation = Rand_S16Offset(0, 2);
+
+    EffectSsBomb_Spawn(play, pos, velocity, accel, &effectPrimColor, 6, 20, 12, rotation, 1, 1);
+}
+
 void func_8084260C(Vec3f* src, Vec3f* dest, f32 arg2, f32 arg3, f32 arg4) {
     dest->x = (Rand_ZeroOne() * arg3) + src->x;
     dest->y = (Rand_ZeroOne() * arg4) + (src->y + arg2);
@@ -8938,7 +8949,7 @@ void func_8084260C(Vec3f* src, Vec3f* dest, f32 arg2, f32 arg3, f32 arg4) {
 static Vec3f D_808545B4 = { 0.0f, 0.0f, 0.0f };
 static Vec3f D_808545C0 = { 0.0f, 0.0f, 0.0f };
 
-// spawn rolling dust, put grass here as well
+// spawn rolling dust or grass
 s32 func_8084269C(PlayState* play, Player* this) {
     Vec3f sp2C;
 
@@ -8949,6 +8960,17 @@ s32 func_8084269C(PlayState* play, Player* this) {
         func_8084260C(&this->actor.shape.feetPos[FOOT_RIGHT], &sp2C,
                       this->actor.floorHeight - this->actor.shape.feetPos[FOOT_RIGHT].y, 7.0f, 5.0f);
         func_800286CC(play, &this->actor.shape.feetPos[FOOT_RIGHT], &D_808545B4, &D_808545C0, 50, 30);
+        return 1;
+    }
+
+    // grass effects during higher velocity like rolling
+    if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
+        func_8084260C(&this->actor.shape.feetPos[FOOT_LEFT], &sp2C,
+                      this->actor.floorHeight - this->actor.shape.feetPos[FOOT_LEFT].y, 7.0f, 5.0f);
+        Player_SpawnGrassBlade(play, &sp2C, &D_808545B4, &D_808545C0, 6, 20);
+        func_8084260C(&this->actor.shape.feetPos[FOOT_RIGHT], &sp2C,
+                      this->actor.floorHeight - this->actor.shape.feetPos[FOOT_RIGHT].y, 7.0f, 5.0f);
+        Player_SpawnGrassBlade(play, &this->actor.shape.feetPos[FOOT_RIGHT], &D_808545B4, &D_808545C0, 6, 20);
         return 1;
     }
 
@@ -9572,33 +9594,45 @@ void func_8084409C(PlayState* play, Player* this, f32 speedXZ, f32 velocityY) {
     }
 }
 
-void Player_SpawnVelocityDust(PlayState* play, Actor* actor, s32 amountMinusOne,
+void Player_SpawnVelocityDust(PlayState* play, Player* this, s32 amountMinusOne,
                               f32 randAccelWeight, s16 scale, s16 scaleStep, s16 direction) {
-    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 255 };
     Vec3f pos;
     Vec3f velocity = { 0.0f, 0.0f, 0.0f };
-    Vec3f accel = { 0.0f, 0.2f, 0.0f };
+    Vec3f accel = { 0.0f, 0.0f, 0.0f };
     s16 angle;
     s32 i;
-    s16 rotation;
 
     if (direction == 1) {
-        angle = actor->shape.rot.y + 0x4000;
-        rotation = 0;
+        angle = this->actor.shape.rot.y + 0x4600;
     } else if (direction == 3) {
-        angle = actor->shape.rot.y - 0x4000;
-        rotation = 1;
+        angle = this->actor.shape.rot.y - 0x4600;
     }
-    pos.y = actor->floorHeight + 1.0f;
-    accel.y += (Rand_ZeroOne() - 0.5f) * 0.1f;
+    pos.y = this->actor.floorHeight;
 
     for (i = amountMinusOne; i >= 0; i--) {
-        pos.x = Math_SinS(angle) * 15.0f + actor->world.pos.x;
-        pos.z = Math_CosS(angle) * 15.0f + actor->world.pos.z;
-        accel.x = 2.5f * Math_SinS(angle) + Rand_ZeroOne() * randAccelWeight;
-        accel.z = 2.5f * Math_CosS(angle) + Rand_ZeroOne() * randAccelWeight;
+        velocity.y = Rand_ZeroOne() + 0.25f;
+        pos.x = Math_SinS(angle) * 15.0f + this->actor.world.pos.x;
+        pos.z = Math_CosS(angle) * 15.0f + this->actor.world.pos.z;
+        velocity.x = Math_SinS(angle) * 2.5f;
+        velocity.z = Math_CosS(angle) * 2.5f;
 
-        EffectSsBomb_Spawn(play, &pos, &velocity, &accel, &effectPrimColor, 10, 40, 10, rotation, 1, 1);
+        /* velocity.x = this->actor.velocity.x * 0.25f;
+        velocity.z = this->actor.velocity.z * 0.25f; */
+
+        if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (this->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
+            func_800286CC(play, &pos, &velocity, &accel, 50, 30);
+        } else if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
+            Player_SpawnGrassBlade(play, &pos, &velocity, &accel, 6, 20);
+        }
+
+        pos.x = this->actor.world.pos.x;
+        pos.z = this->actor.world.pos.z;
+
+        if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (this->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
+            func_800286CC(play, &pos, &velocity, &accel, 50, 30);
+        } else if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
+            Player_SpawnGrassBlade(play, &pos, &velocity, &accel, 6, 20);
+        }
 
         angle += 0x600;
     }
@@ -9687,7 +9721,7 @@ void Player_Action_8084411C(Player* this, PlayState* play) {
         s32 sp3C;
 
         if (this->av1.actionVar1 != 0 && this->av1.actionVar1 != 2) { // 1 left, 2 back, 3 right, 0 normak
-            Player_SpawnVelocityDust(play, &this->actor, 2, 2.0f, 0, 0, this->av1.actionVar1);
+            Player_SpawnVelocityDust(play, this, 2, 0.0f, 0, 0, this->av1.actionVar1);
         } else { // front
             Actor_SpawnOkamiFloorDustRing(play, &this->actor, &this->actor.world.pos, 5.0f, 7, 0.0f, 0, 0, true);
         }

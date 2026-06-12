@@ -3839,7 +3839,7 @@ void func_80033480(PlayState* play, Vec3f* posBase, f32 randRangeDiameter, s32 a
 
 void Actor_SpawnOkamiFloorDustRing(PlayState* play, Actor* actor, Vec3f* posXZ, f32 radius, s32 amountMinusOne,
                               f32 randAccelWeight, s16 scale, s16 scaleStep, u8 useLighting) {
-    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 255 };
+    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 150 };
     Vec3f pos;
     Vec3f velocity = { 0.0f, 0.0f, 0.0f };
     Vec3f accel = { 0.0f, 0.2f, 0.0f };
