@@ -1683,13 +1683,14 @@ s32 Camera_Normal1(Camera* camera) {
 
     if (camera->xzSpeed > 0.001f) {
         rwData->startSwingTimer = CAM_GLOBAL_50 + CAM_GLOBAL_51;
-    } else if (rwData->startSwingTimer > 0) {
+    // remove swing when idle
+    } /* else if (rwData->startSwingTimer > 0) {
         if (rwData->startSwingTimer > CAM_GLOBAL_50) {
             rwData->swingYawTarget = atEyeGeo.yaw + ((s16)((s16)(camera->playerPosRot.rot.y - 0x7FFF) - atEyeGeo.yaw) /
                                                      rwData->startSwingTimer);
         }
         rwData->startSwingTimer--;
-    }
+    } */
 
     spA0 = camera->speedRatio * CAM_UPDATE_RATE_STEP_SCALE_XZ;
     sp9C = camera->speedRatio * CAM_UPDATE_RATE_STEP_SCALE_Y;
