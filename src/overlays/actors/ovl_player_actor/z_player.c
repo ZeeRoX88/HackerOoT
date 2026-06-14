@@ -1990,12 +1990,8 @@ void Player_ProcessAnimSfxList(Player* this, AnimSfxEntry* entry) {
                 Player_PlayVoiceSfx(this, entry->sfxId);
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_LANDING)) {
                 Player_PlayLandingSfx(this);
-            } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_RUNNING)) { // put dust and grass spawner here!
+            } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_RUNNING)) {
                 Player_PlaySteppingSfx(this, 6.0f);
-                //
-                /* if (1) {
-                    Player_SpawnGrassBlade(play, &this->actor.shape.feetPos[FOOT_LEFT], &D_808545B4, &D_808545C0, 50, 30);
-                } */
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_JUMPING)) {
                 Player_PlayJumpingSfx(this);
             } else if (type == ANIMSFX_SHIFT_TYPE(ANIMSFX_TYPE_WALKING)) {
@@ -8931,13 +8927,6 @@ void Player_Action_8084251C(Player* this, PlayState* play) {
             }
         }
     }
-}
-
-void Player_SpawnGrassBlade(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale, s16 scaleStep) {
-    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 100 };
-    u8 rotation = Rand_S16Offset(0, 2);
-
-    EffectSsBomb_Spawn(play, pos, velocity, accel, &effectPrimColor, 6, 20, 12, rotation, 1, 1);
 }
 
 void func_8084260C(Vec3f* src, Vec3f* dest, f32 arg2, f32 arg3, f32 arg4) {

@@ -42,7 +42,7 @@ typedef struct ActorShape {
     /* 0x10 */ f32 shadowScale; // Changes the size of the shadow
     /* 0x14 */ u8 shadowAlpha; // Default is 255
     /* 0x15 */ u8 feetFloorFlag; // 0 if actor or feet aren't on ground, or 1 or 2 depending on feet positions
-    u8 unk_17; // footmark flag?
+    u8 feetFloorSetFlag;
     /* 0x18 */ Vec3f feetPos[2]; // Update by using `Actor_SetFeetPos` in PostLimbDraw
 } ActorShape; // size = 0x30
 
@@ -812,5 +812,6 @@ s32 Actor_TrackPlayer(struct PlayState* play, Actor* actor, Vec3s* headRot, Vec3
 
 void Actor_SpawnOkamiFloorDustRing(struct PlayState* play, Actor* actor, Vec3f* posXZ, f32 radius, s32 amountMinusOne,
                               f32 randAccelWeight, s16 scale, s16 scaleStep, u8 useLighting);
+void Player_SpawnGrassBlade(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale, s16 scaleStep);
 
 #endif

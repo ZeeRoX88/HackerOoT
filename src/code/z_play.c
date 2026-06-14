@@ -1808,6 +1808,33 @@ int Play_InCsMode(PlayState* this) {
     return (this->csCtx.state != CS_STATE_IDLE) || Player_InCsMode(this);
 }
 
+f32 Play_GetFloorSurfaceImpl(PlayState* this, MtxF* mtx, CollisionPoly** poly, s32* bgId, Vec3f* pos) {
+    f32 floorHeight = BgCheck_EntityRaycastDown3(&this->colCtx, poly, bgId, pos);
+
+    if (floorHeight > BGCHECK_Y_MIN) {
+        func_80038A28(*poly, pos->x, floorHeight, pos->z, mtx);
+    } else {
+        mtx->xy = 0.0f;
+        mtx->zx = 0.0f;
+        mtx->yx = 0.0f;
+        mtx->xx = 0.0f;
+        mtx->wz = 0.0f;
+        mtx->xz = 0.0f;
+        mtx->wy = 0.0f;
+        mtx->wx = 0.0f;
+        mtx->zz = 0.0f;
+        mtx->yz = 0.0f;
+        mtx->zy = 0.0f;
+        mtx->yy = 1.0f;
+        mtx->xw = pos->x;
+        mtx->yw = pos->y;
+        mtx->zw = pos->z;
+        mtx->ww = 1.0f;
+    }
+
+    return floorHeight;
+}
+
 f32 func_800BFCB8(PlayState* this, MtxF* mf, Vec3f* pos) {
     CollisionPoly poly;
     f32 temp1;

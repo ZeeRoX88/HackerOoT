@@ -179,6 +179,8 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
     if (distToFloor < 200.0f) {
         MtxF floorMtx;
         MtxF spFC;
+        CollisionPoly* poly;
+        s32 bgId;
         f32 floorHeight[2]; // One for each foot
         f32 distToFloor;
         f32 shadowAlpha;
@@ -193,7 +195,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         Light* firstLightPtr = &lights->l.l[0];
         Vec3f* feetPosPtr = actor->shape.feetPos;
         f32* floorHeightPtr = floorHeight;
-        s32 spB8; // footmark
+        u8 spB8; // footmark
 
         OPEN_DISPS(play->state.gfxCtx, "../z_actor.c", 1741);
 
@@ -205,61 +207,46 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         actor->shape.feetFloorFlag = 0;
         spB8 = 2;
 
+        /* Debug_Print(1, "%.3f speed", actor->speed);
+        Debug_Print_Draw(1, play); */
+
         for (i = 0; i < ARRAY_COUNT(floorHeight); i++, spB8 >>= 1) {
             feetPosPtr->y += 50.0f;
-            *floorHeightPtr = func_800BFCB8(play, &floorMtx, feetPosPtr);
+            // *floorHeightPtr = func_800BFCB8(play, &floorMtx, feetPosPtr);
+            *floorHeightPtr = Play_GetFloorSurfaceImpl(play, &floorMtx, &poly, &bgId, feetPosPtr);
             feetPosPtr->y -= 50.0f;
-            // actor->shape.feetFloorFlag <<= 1;
             distToFloor = feetPosPtr->y - *floorHeightPtr;
 
-            if ((-1.0f <= distToFloor) && (distToFloor < 500.0f)) {
-                /* if (distToFloor <= 0.0f) {
-                    actor->shape.feetFloorFlag++;
-                } */
-                if (distToFloor <= 10.0f) {
+            if ((distToFloor >= -1.0f) && (distToFloor < 500.0f)) {
+                if (distToFloor <= 4.0f) {
                     actor->shape.feetFloorFlag |= spB8; // set
-                    // add link is wet check here
-                    if ((actor->depthInWater < 0.0f) /* && (bgId == BGCHECK_SCENE) */ && (actor->shape.unk_17 & spB8)) {
+
+                    if ((actor->depthInWater < 0.0f) && (bgId == BGCHECK_SCENE) && (actor->shape.feetFloorSetFlag & spB8) && (actor->category == ACTORCAT_PLAYER)) {
+                        Player* player = GET_PLAYER(play);
                         if (1/* SurfaceType_HasMaterialProperty(&play->colCtx, poly, bgId,
                                                             MATERIAL_PROPERTY_SOFT_IMPRINT) */) {
-                            /* SkinMatrix_MtxFCopy(&floorMtx, &spFC);
+                            SkinMatrix_MtxFCopy(&floorMtx, &spFC);
                             SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
                             // not sure if it is good to use the IREG
-                            EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
+                            /* EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
                                             IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
-                            // maybe spawn footstep dust/grass effects here o.o
-                            // 1 is right foot, is set when on ground
-                            if (1/* actor->shape.feetFloorFlag & 2 *//*  || actor->shape.feetFloorFlag & 2 */) {
-                                func_80033480(play, feetPosPtr, 1.0f, 1, 10, 10, 1);
-                                Actor_PlaySfx(actor, NA_SE_IT_WALL_HIT_BUYO);
+                            if (actor->speed > 5.9f && actor->speed < 6.1f) {
+                                Vec3f velocity = { 0.0f, 1.0f, 0.0f };
+                                Vec3f accel = { 0.0f, 0.0f, 0.0f };
+
+                                if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (player->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
+                                    func_800286CC(play, feetPosPtr, &velocity, &accel, 50, 30);
+                                } else if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
+                                    Player_SpawnGrassBlade(play, feetPosPtr, &velocity, &accel, 4, 15);
+                                }
                             }
                         }
-                        actor->shape.unk_17 &= ~spB8; // unset? when is this ever set???
+                        actor->shape.feetFloorSetFlag &= ~spB8; // unset? when is this ever set??? this shit is set inside MM player
                     }
                 } else {
-                    if (!(actor->shape.unk_17 & spB8)) {
-                        actor->shape.unk_17 |= spB8;
+                    if (!(actor->shape.feetFloorSetFlag & spB8)) {
+                        actor->shape.feetFloorSetFlag |= spB8;
                     }
-                }
-
-                if (actor->shape.feetFloorFlag & 2) {
-                    Debug_Print(3, "LEFT");
-                    Debug_Print_Draw(3, play);
-                }
-
-                if (actor->shape.feetFloorFlag & 1) {
-                    Debug_Print(4, "RIGHT");
-                    Debug_Print_Draw(4, play);
-                }
-
-                if (actor->shape.unk_17 & 2) {
-                    Debug_Print(5, "LEFT");
-                    Debug_Print_Draw(5, play);
-                }
-
-                if (actor->shape.unk_17 & 1) {
-                    Debug_Print(6, "RIGHT");
-                    Debug_Print_Draw(6, play);
                 }
 
                 if (distToFloor > 30.0f) {
@@ -3919,6 +3906,13 @@ void Actor_SpawnOkamiFloorDustRing(PlayState* play, Actor* actor, Vec3f* posXZ, 
 
         angle += (2.0f * 3.14f) / (amountMinusOne + 1.0f);
     }
+}
+
+void Player_SpawnGrassBlade(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale, s16 scaleStep) {
+    static Color_RGBA8 effectPrimColor = { 180, 220, 100, 100 };
+    u8 rotation = Rand_S16Offset(0, 2);
+
+    EffectSsBomb_Spawn(play, pos, velocity, accel, &effectPrimColor, scale, scaleStep, 12, rotation, 1, 1);
 }
 
 Actor* Actor_GetCollidedExplosive(PlayState* play, Collider* collider) {

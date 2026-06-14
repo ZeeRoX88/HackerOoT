@@ -153,6 +153,7 @@ Gfx* Play_SetFog(PlayState* this, Gfx* gfx);
 void Play_Main(GameState* thisx);
 int Play_InCsMode(PlayState* this);
 f32 func_800BFCB8(PlayState* this, MtxF* mf, Vec3f* pos);
+f32 Play_GetFloorSurfaceImpl(PlayState* this, MtxF* mtx, CollisionPoly** poly, s32* bgId, Vec3f* pos);
 void* Play_LoadFile(PlayState* this, RomFile* file);
 void Play_GetScreenPos(PlayState* this, Vec3f* src, Vec3f* dest);
 s16 Play_CreateSubCamera(PlayState* this);
