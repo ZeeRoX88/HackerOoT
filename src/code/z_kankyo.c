@@ -2217,8 +2217,8 @@ void Environment_DrawSunAndMoon(PlayState* play) {
             u8 moonPhase = gSaveContext.save.totalDays % 8;
             // moonPhase = 5;
 
-            Debug_Print(0, "%.3f", play->envCtx.sunPos.y);
-            Debug_Print_Draw(0, play);
+            /* Debug_Print(0, "%.3f", play->envCtx.sunPos.y);
+            Debug_Print_Draw(0, play); */
 
             //if moon is at a certain y height, start to lerp between skybox colors, y 1400 - y 900
 
