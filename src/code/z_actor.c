@@ -30,6 +30,7 @@
 #include "config.h"
 #include "widescreen.h"
 #include "z64eff_footmark.h"
+#include "z_debug.h"
 
 #include "overlays/actors/ovl_Arms_Hook/z_arms_hook.h"
 #include "overlays/actors/ovl_En_Part/z_en_part.h"
@@ -204,11 +205,11 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         actor->shape.feetFloorFlag = 0;
         spB8 = 2;
 
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < ARRAY_COUNT(floorHeight); i++, spB8 >>= 1) {
             feetPosPtr->y += 50.0f;
             *floorHeightPtr = func_800BFCB8(play, &floorMtx, feetPosPtr);
             feetPosPtr->y -= 50.0f;
-            actor->shape.feetFloorFlag <<= 1;
+            // actor->shape.feetFloorFlag <<= 1;
             distToFloor = feetPosPtr->y - *floorHeightPtr;
 
             if ((-1.0f <= distToFloor) && (distToFloor < 500.0f)) {
@@ -216,26 +217,56 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                     actor->shape.feetFloorFlag++;
                 } */
                 if (distToFloor <= 10.0f) {
-                    actor->shape.feetFloorFlag |= spB8;
-
+                    actor->shape.feetFloorFlag |= spB8; // set
+                    // add link is wet check here
                     if ((actor->depthInWater < 0.0f) /* && (bgId == BGCHECK_SCENE) */ && (actor->shape.unk_17 & spB8)) {
                         if (1/* SurfaceType_HasMaterialProperty(&play->colCtx, poly, bgId,
                                                             MATERIAL_PROPERTY_SOFT_IMPRINT) */) {
-                            SkinMatrix_MtxFCopy(&floorMtx, &spFC);
+                            /* SkinMatrix_MtxFCopy(&floorMtx, &spFC);
                             SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
+                            // not sure if it is good to use the IREG
                             EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
-                                            IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60);
+                                            IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
+                            // maybe spawn footstep dust/grass effects here o.o
+                            // 1 is right foot, is set when on ground
+                            if (1/* actor->shape.feetFloorFlag & 2 *//*  || actor->shape.feetFloorFlag & 2 */) {
+                                func_80033480(play, feetPosPtr, 1.0f, 1, 10, 10, 1);
+                                Actor_PlaySfx(actor, NA_SE_IT_WALL_HIT_BUYO);
+                            }
                         }
-                        actor->shape.unk_17 &= ~spB8;
+                        actor->shape.unk_17 &= ~spB8; // unset? when is this ever set???
+                    }
+                } else {
+                    if (!(actor->shape.unk_17 & spB8)) {
+                        actor->shape.unk_17 |= spB8;
                     }
                 }
+
+                if (actor->shape.feetFloorFlag & 2) {
+                    Debug_Print(3, "LEFT");
+                    Debug_Print_Draw(3, play);
+                }
+
+                if (actor->shape.feetFloorFlag & 1) {
+                    Debug_Print(4, "RIGHT");
+                    Debug_Print_Draw(4, play);
+                }
+
+                if (actor->shape.unk_17 & 2) {
+                    Debug_Print(5, "LEFT");
+                    Debug_Print_Draw(5, play);
+                }
+
+                if (actor->shape.unk_17 & 1) {
+                    Debug_Print(6, "RIGHT");
+                    Debug_Print_Draw(6, play);
+                }
+
                 if (distToFloor > 30.0f) {
                     distToFloor = 30.0f;
                 }
+
                 shadowAlpha = (f32)actor->shape.shadowAlpha * (1.0f - (distToFloor * (1.0f / 30.0f)));
-                if (distToFloor > 30.0f) {
-                    distToFloor = 30.0f;
-                }
                 shadowScaleZ = 1.0f - (distToFloor * (1.0f / (30.0f + 40.0f)));
                 shadowScaleX = shadowScaleZ * actor->shape.shadowScale * actor->scale.x;
                 lightNumMax = 0;

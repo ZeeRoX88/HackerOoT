@@ -14,6 +14,7 @@
 #include "array_count.h"
 
 // #include "assets/code/eff_footmark/eff_footmark.c"
+// add assets here
 
 #define CHECK_FLAG_ALL(flags, mask) (((flags) & (mask)) == (mask))
 
