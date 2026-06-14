@@ -230,7 +230,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                             // not sure if it is good to use the IREG
                             /* EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
                                             IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
-                            if (actor->speed > 5.9f && actor->speed < 6.1f) {
+                            if ((LINK_IS_CHILD && actor->speed > 5.4f && actor->speed < 5.6f) || (actor->speed > 5.9f && actor->speed < 6.1f)) {
                                 Vec3f velocity = { 0.0f, 1.0f, 0.0f };
                                 Vec3f accel = { 0.0f, 0.0f, 0.0f };
 
