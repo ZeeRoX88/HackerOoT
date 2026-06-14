@@ -27,6 +27,7 @@
 #include "view.h"
 #include "animated_materials.h"
 #include "config.h"
+#include "z64eff_footmark.h"
 
 union Color_RGBA8_u32;
 struct Path;
@@ -73,6 +74,7 @@ typedef struct PlayState {
     /* 0x01C24 */ ActorContext actorCtx;
     /* 0x01D64 */ CutsceneContext csCtx; // "demo_play"
     /* 0x01DB4 */ SfxSource sfxSources[SFX_SOURCE_COUNT];
+                  EffFootmark footprintInfo[100];
     /* 0x01F74 */ SramContext sramCtx;
     /* 0x01F78 */ SkyboxContext skyboxCtx;
     /* 0x020D8 */ MessageContext msgCtx;         // "message"

@@ -21,5 +21,10 @@ void SkinMatrix_SetTranslateRotateZYX(MtxF* dest, s16 rotX, s16 rotY, s16 rotZ, 
                                       f32 translateZ);
 Mtx* SkinMatrix_MtxFToNewMtx(struct GraphicsContext* gfxCtx, MtxF* src);
 void SkinMatrix_SetRotateAxis(MtxF* mf, s16 angle, f32 axisX, f32 axisY, f32 axisZ);
+void SkinMatrix_SetXRotation(MtxF* mf, s16 a);
+void SkinMatrix_MulXRotation(MtxF* mf, s16 a);
+void SkinMatrix_SetYRotation(MtxF* mf, s16 a);
+void SkinMatrix_MulYRotation(MtxF* mf, s16 a);
+void SkinMatrix_SetZRotation(MtxF* mf, s16 a);
 
 #endif

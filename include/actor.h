@@ -42,6 +42,7 @@ typedef struct ActorShape {
     /* 0x10 */ f32 shadowScale; // Changes the size of the shadow
     /* 0x14 */ u8 shadowAlpha; // Default is 255
     /* 0x15 */ u8 feetFloorFlag; // 0 if actor or feet aren't on ground, or 1 or 2 depending on feet positions
+    u8 unk_17; // footmark flag?
     /* 0x18 */ Vec3f feetPos[2]; // Update by using `Actor_SetFeetPos` in PostLimbDraw
 } ActorShape; // size = 0x30
 

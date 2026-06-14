@@ -52,6 +52,7 @@
 #include "debug.h"
 #include "animated_materials.h"
 #include "z_debug.h"
+#include "z64eff_footmark.h"
 
 #if CAN_INCLUDE_EXAMPLE_SCENE
 #include "assets/scenes/example/example_scene.h"
@@ -405,6 +406,7 @@ void Play_Init(GameState* thisx) {
     Message_Init(this);
     GameOver_Init(this);
     SfxSource_InitAll(this);
+    EffFootmark_Init(this);
     Effect_InitContext(this);
     EffectSs_InitInfo(this, 0x55);
     CollisionCheck_InitContext(this, &this->colChkCtx);
@@ -1102,6 +1104,8 @@ void Play_Update(PlayState* this) {
 
                     PLAY_LOG(3657);
                     EffectSs_UpdateAll(this);
+
+                    EffFootmark_Update(this);
 
                     PLAY_LOG(3662);
                 }

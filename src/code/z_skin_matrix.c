@@ -647,7 +647,7 @@ void SkinMatrix_SetRotateAxis(MtxF* mf, s16 angle, f32 axisX, f32 axisY, f32 axi
     mf->ww = 1.0f;
 }
 
-void func_800A8030(MtxF* mf, f32* arg1) {
+/* void func_800A8030(MtxF* mf, f32* arg1) {
     f32 n;
     f32 xNorm;
     f32 yNorm;
@@ -693,4 +693,173 @@ void func_800A8030(MtxF* mf, f32* arg1) {
     mf->yw = 0.0f;
     mf->ww = 1.0f;
     mf->zw = 0.0f;
+} */
+
+void SkinMatrix_SetXRotation(MtxF* mf, s16 a) {
+    f32 sinA;
+    f32 cosA;
+
+    if (a != 0) {
+        sinA = Math_SinS(a);
+        cosA = Math_CosS(a);
+    } else {
+        sinA = 0.0f;
+        cosA = 1.0f;
+    }
+
+    mf->yx = 0.0f;
+    mf->zx = 0.0f;
+    mf->wx = 0.0f;
+
+    mf->xy = 0.0f;
+    mf->wy = 0.0f;
+
+    mf->xz = 0.0f;
+    mf->wz = 0.0f;
+
+    mf->xw = 0.0f;
+    mf->yw = 0.0f;
+    mf->zw = 0.0f;
+
+    mf->xx = 1.0f;
+    mf->ww = 1.0f;
+
+    mf->yy = cosA;
+    mf->zz = cosA;
+    mf->zy = sinA;
+    mf->yz = -sinA;
+}
+
+void SkinMatrix_MulXRotation(MtxF* mf, s16 a) {
+    f32 sinA;
+    f32 cosA;
+    f32 ry;
+    f32 rz;
+
+    if (a != 0) {
+        sinA = Math_SinS(a);
+        cosA = Math_CosS(a);
+
+        ry = mf->xy;
+        rz = mf->xz;
+        mf->xy = ry * cosA + rz * sinA;
+        mf->xz = rz * cosA - ry * sinA;
+
+        ry = mf->yy;
+        rz = mf->yz;
+        mf->yy = ry * cosA + rz * sinA;
+        mf->yz = rz * cosA - ry * sinA;
+
+        ry = mf->zy;
+        rz = mf->zz;
+        mf->zy = ry * cosA + rz * sinA;
+        mf->zz = rz * cosA - ry * sinA;
+
+        ry = mf->wy;
+        rz = mf->wz;
+        mf->wy = ry * cosA + rz * sinA;
+        mf->wz = rz * cosA - ry * sinA;
+    }
+}
+
+void SkinMatrix_SetYRotation(MtxF* mf, s16 a) {
+    f32 sinA;
+    f32 cosA;
+
+    if (a != 0) {
+        sinA = Math_SinS(a);
+        cosA = Math_CosS(a);
+    } else {
+        sinA = 0.0f;
+        cosA = 1.0f;
+    }
+
+    mf->yx = 0.0f;
+    mf->wx = 0.0f;
+
+    mf->xy = 0.0f;
+    mf->zy = 0.0f;
+    mf->wy = 0.0f;
+
+    mf->yz = 0.0f;
+    mf->wz = 0.0f;
+
+    mf->xw = 0.0f;
+    mf->yw = 0.0f;
+    mf->zw = 0.0f;
+
+    mf->yy = 1.0f;
+    mf->ww = 1.0f;
+
+    mf->xx = cosA;
+    mf->zz = cosA;
+    mf->zx = -sinA;
+    mf->xz = sinA;
+}
+
+void SkinMatrix_MulYRotation(MtxF* mf, s16 a) {
+    f32 sinA;
+    f32 cosA;
+    f32 rx;
+    f32 rz;
+
+    if (a != 0) {
+        sinA = Math_SinS(a);
+        cosA = Math_CosS(a);
+
+        rx = mf->xx;
+        rz = mf->xz;
+        mf->xx = rx * cosA - rz * sinA;
+        mf->xz = rx * sinA + rz * cosA;
+
+        rx = mf->yx;
+        rz = mf->yz;
+        mf->yx = rx * cosA - rz * sinA;
+        mf->yz = rx * sinA + rz * cosA;
+
+        rx = mf->zx;
+        rz = mf->zz;
+        mf->zx = rx * cosA - rz * sinA;
+        mf->zz = rx * sinA + rz * cosA;
+
+        rx = mf->wx;
+        rz = mf->wz;
+        mf->wx = rx * cosA - rz * sinA;
+        mf->wz = rx * sinA + rz * cosA;
+    }
+}
+
+void SkinMatrix_SetZRotation(MtxF* mf, s16 a) {
+    f32 sinA;
+    f32 cosA;
+
+    if (a != 0) {
+        sinA = Math_SinS(a);
+        cosA = Math_CosS(a);
+    } else {
+        sinA = 0.0f;
+        cosA = 1.0f;
+    }
+
+    mf->zx = 0.0f;
+    mf->wx = 0.0f;
+
+    mf->zy = 0.0f;
+    mf->wy = 0.0f;
+
+    mf->xz = 0.0f;
+    mf->yz = 0.0f;
+    mf->wz = 0.0f;
+
+    mf->xw = 0.0f;
+    mf->yw = 0.0f;
+    mf->zw = 0.0f;
+
+    mf->zz = 1.0f;
+    mf->ww = 1.0f;
+
+    mf->xx = cosA;
+    mf->yy = cosA;
+    mf->yx = sinA;
+    mf->xy = -sinA;
 }

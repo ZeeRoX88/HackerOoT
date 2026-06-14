@@ -29,6 +29,7 @@
 #include "skin_matrix.h"
 #include "config.h"
 #include "widescreen.h"
+#include "z64eff_footmark.h"
 
 #include "overlays/actors/ovl_Arms_Hook/z_arms_hook.h"
 #include "overlays/actors/ovl_En_Part/z_en_part.h"
@@ -176,6 +177,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
 
     if (distToFloor < 200.0f) {
         MtxF floorMtx;
+        MtxF spFC;
         f32 floorHeight[2]; // One for each foot
         f32 distToFloor;
         f32 shadowAlpha;
@@ -190,6 +192,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         Light* firstLightPtr = &lights->l.l[0];
         Vec3f* feetPosPtr = actor->shape.feetPos;
         f32* floorHeightPtr = floorHeight;
+        s32 spB8; // footmark
 
         OPEN_DISPS(play->state.gfxCtx, "../z_actor.c", 1741);
 
@@ -199,6 +202,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         // feetFloorFlag is temporarily a bitfield where the bits are set if the foot is on ground
         // feetFloorFlag & 2 is left foot, feetFloorFlag & 1 is right foot
         actor->shape.feetFloorFlag = 0;
+        spB8 = 2;
 
         for (i = 0; i < 2; i++) {
             feetPosPtr->y += 50.0f;
@@ -208,8 +212,22 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
             distToFloor = feetPosPtr->y - *floorHeightPtr;
 
             if ((-1.0f <= distToFloor) && (distToFloor < 500.0f)) {
-                if (distToFloor <= 0.0f) {
+                /* if (distToFloor <= 0.0f) {
                     actor->shape.feetFloorFlag++;
+                } */
+                if (distToFloor <= 10.0f) {
+                    actor->shape.feetFloorFlag |= spB8;
+
+                    if ((actor->depthInWater < 0.0f) /* && (bgId == BGCHECK_SCENE) */ && (actor->shape.unk_17 & spB8)) {
+                        if (1/* SurfaceType_HasMaterialProperty(&play->colCtx, poly, bgId,
+                                                            MATERIAL_PROPERTY_SOFT_IMPRINT) */) {
+                            SkinMatrix_MtxFCopy(&floorMtx, &spFC);
+                            SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
+                            EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
+                                            IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60);
+                        }
+                        actor->shape.unk_17 &= ~spB8;
+                    }
                 }
                 if (distToFloor > 30.0f) {
                     distToFloor = 30.0f;
@@ -2997,6 +3015,8 @@ void Actor_DrawAll(PlayState* play, ActorContext* actorCtx) {
     if (!DEBUG_FEATURES || (HREG(64) != 1) || (HREG(74) != 0)) {
         EffectSs_DrawAll(play);
     }
+
+    EffFootmark_Draw(play);
 
     if (!DEBUG_FEATURES || (HREG(64) != 1) || (HREG(72) != 0)) {
         if (play->actorCtx.lensActive) {
