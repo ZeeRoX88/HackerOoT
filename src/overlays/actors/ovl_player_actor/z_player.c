@@ -12144,6 +12144,13 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
         sUseHeldItem = sHeldItemButtonIsHeldDown = false;
         sSavedCurrentMask = this->currentMask;
 
+        // wet water stuff here
+        if ((this->wetTimer < 200) && ((this->stateFlags1 & PLAYER_STATE1_27) || (this->actor.depthInWater >= 50.0f))) { // link is swimming or underwater
+            this->wetTimer = 200;
+        } else if ((this->wetTimer > 0) && !((this->stateFlags1 & PLAYER_STATE1_27) || (this->actor.depthInWater >= 50.0f))) { // link isn't inside water
+            this->wetTimer--;
+        }
+
         if (!(this->stateFlags3 & PLAYER_STATE3_2)) {
             this->actionFunc(this, play);
         }

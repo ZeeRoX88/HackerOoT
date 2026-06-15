@@ -230,6 +230,11 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                                                 IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
                                 EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
                                                 80, 60, 40, 30000, 200, 60);
+                            } else if (player->wetTimer > 0) {
+                                SkinMatrix_MtxFCopy(&floorMtx, &spFC);
+                                SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
+                                EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
+                                                0, 0, 0, player->wetTimer << 7, 200, 0);
                             }
                             if ((LINK_IS_CHILD && actor->speed > 5.4f && actor->speed < 5.6f) || (actor->speed > 5.9f && actor->speed < 6.1f)) {
                                 Vec3f velocity = { 0.0f, 1.0f, 0.0f };

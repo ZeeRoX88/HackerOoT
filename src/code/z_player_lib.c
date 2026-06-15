@@ -12,6 +12,7 @@
 #include "player.h"
 #include "save.h"
 #include "skin_matrix.h"
+#include "z_debug.h"
 
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
 #include "assets/objects/object_link_boy/object_link_boy.h"
@@ -1125,7 +1126,21 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
 #endif
 
     color = &sTunicColors[tunic];
-    gDPSetEnvColor(POLY_OPA_DISP++, color->r, color->g, color->b, 0);
+
+    Player* this = GET_PLAYER(play);
+    Color_RGB8 stupidColor;
+
+    stupidColor = sTunicColors[tunic];
+
+    // wet water stuff here
+    if (this->wetTimer > 0) {
+        f32 colorBlend = this->wetTimer * 0.003f;
+
+        stupidColor.r = LERP(sTunicColors[tunic].r, 0, colorBlend);
+        stupidColor.g = LERP(sTunicColors[tunic].g, 0, colorBlend);
+        stupidColor.b = LERP(sTunicColors[tunic].b, 0, colorBlend);
+    }
+    gDPSetEnvColor(POLY_OPA_DISP++, stupidColor.r, stupidColor.g, stupidColor.b, 0);
 
     sDListsLodOffset = lod * 2;
 
