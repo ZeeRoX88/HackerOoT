@@ -1,4 +1,5 @@
 #include "config.h"
+#include "assets/objects/gameplay_keep/gameplay_keep.h"
 
 #if MM_BOTTLE_MODEL
 #include "assets/objects/gameplay_hacker_keep/bottle.c"
@@ -71,4 +72,24 @@ Gfx gOEffDustDL[] = {
 	gsSPDisplayList(mat_gOEffDustDL_f3dlite_material_layerTransparent),
 	gsSPDisplayList(gOEffDustDL_gOEffDustDL_mesh_layer_Transparent_tri_0),
 	gsSPEndDisplayList(),
+};
+
+Vtx gCircleShadowDL_gCircleShadowDL_mesh_layer_Transparent_vtx_0[4] = {
+    {{ {-57, 0, 57}, 0, {-16, 1008}, {160, 151, 205, 255} }},
+    {{ {57, 0, 57}, 0, {1008, 1008}, {160, 151, 205, 255} }},
+    {{ {57, 0, -57}, 0, {1008, -16}, {160, 151, 205, 255} }},
+    {{ {-57, 0, -57}, 0, {-16, -16}, {160, 151, 205, 255} }},
+};
+
+Gfx gCircleShadowNewDL[] = {
+    gsDPPipeSync(),
+    gsSPTexture(65535, 65535, 0, 0, 1),
+    gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_16b_LOAD_BLOCK, 1, gCircleShadowTex),
+    gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+    gsDPLoadBlock(7, 0, 0, 1023, 256),
+    gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_16b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0),
+    gsDPSetTileSize(0, 0, 0, 124, 124),
+    gsSPVertex(gCircleShadowDL_gCircleShadowDL_mesh_layer_Transparent_vtx_0 + 0, 4, 0),
+    gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
+    gsSPEndDisplayList(),
 };

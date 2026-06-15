@@ -37,6 +37,7 @@
 
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
 #include "assets/objects/gameplay_dangeon_keep/gameplay_dangeon_keep.h"
+#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 #include "assets/objects/object_bdoor/object_bdoor.h"
 
 #pragma increment_block_number "gc-eu:128 gc-eu-mq:128 gc-jp:128 gc-jp-ce:128 gc-jp-mq:128 gc-us:128 gc-us-mq:128" \
@@ -105,7 +106,7 @@ void ActorShadow_Draw(Actor* actor, Lights* lights, PlayState* play, Gfx* dlist,
         func_80038A28(actor->floorPoly, actor->world.pos.x, actor->floorHeight, actor->world.pos.z, &sp60);
         Matrix_Put(&sp60);
 
-        if (dlist != gCircleShadowDL) {
+        if (dlist != gCircleShadowNewDL) {
             Matrix_RotateY(BINANG_TO_RAD(actor->shape.rot.y), MTXMODE_APPLY);
         }
 
@@ -121,13 +122,13 @@ void ActorShadow_Draw(Actor* actor, Lights* lights, PlayState* play, Gfx* dlist,
 }
 
 void ActorShadow_DrawCircle(Actor* actor, Lights* lights, PlayState* play) {
-    ActorShadow_Draw(actor, lights, play, gCircleShadowDL, NULL);
+    ActorShadow_Draw(actor, lights, play, gCircleShadowNewDL, NULL);
 }
 
 void ActorShadow_DrawWhiteCircle(Actor* actor, Lights* lights, PlayState* play) {
     static Color_RGBA8 white = { 255, 255, 255, 255 };
 
-    ActorShadow_Draw(actor, lights, play, gCircleShadowDL, &white);
+    ActorShadow_Draw(actor, lights, play, gCircleShadowNewDL, &white);
 }
 
 void ActorShadow_DrawHorse(Actor* actor, Lights* lights, PlayState* play) {
@@ -228,7 +229,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                                 /* EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
                                                 IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
                                 EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
-                                                0, 0, 0, 30000, 200, 60);
+                                                80, 60, 40, 30000, 200, 60);
                             }
                             if ((LINK_IS_CHILD && actor->speed > 5.4f && actor->speed < 5.6f) || (actor->speed > 5.9f && actor->speed < 6.1f)) {
                                 Vec3f velocity = { 0.0f, 1.0f, 0.0f };
@@ -4187,7 +4188,7 @@ void func_80033C30(Vec3f* arg0, Vec3f* arg1, u8 alpha, PlayState* play) {
     Matrix_Scale(arg1->x, 1.0f, arg1->z, MTXMODE_APPLY);
 
     MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, play->state.gfxCtx, "../z_actor.c", 8149);
-    gSPDisplayList(POLY_OPA_DISP++, gCircleShadowDL);
+    gSPDisplayList(POLY_OPA_DISP++, gCircleShadowNewDL);
 
     CLOSE_DISPS(play->state.gfxCtx, "../z_actor.c", 8155);
 }

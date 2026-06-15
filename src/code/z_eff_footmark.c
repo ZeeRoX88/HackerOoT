@@ -15,6 +15,7 @@
 
 // #include "assets/code/eff_footmark/eff_footmark.c"
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
+#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 // add assets here
 
 #define CHECK_FLAG_ALL(flags, mask) (((flags) & (mask)) == (mask))
@@ -120,12 +121,10 @@ void EffFootmark_Draw(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx);
 
-    POLY_OPA_DISP = Gfx_SetupDL(POLY_OPA_DISP, SETUPDL_44);
-    gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_THRESHOLD);
+    Gfx_SetupDL_44Xlu(play->state.gfxCtx);
+    gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
 
-    gDPSetCombineLERP(POLY_OPA_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED, 0, 0, 0, COMBINED);
-
-    // Gfx_SetupDL_44Xlu(play->state.gfxCtx);
+    gDPSetCombineLERP(POLY_XLU_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED, 0, 0, 0, COMBINED);
 
     // gSPDisplayList(POLY_XLU_DISP++, gEffFootprintMaterialDL);
 
@@ -141,10 +140,10 @@ void EffFootmark_Draw(PlayState* play) {
 
             gSPDisplayList(POLY_XLU_DISP++, gEffFootprintModelDL); */
 
-            MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, play->state.gfxCtx);
-            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, footmark->red, footmark->green, footmark->blue,
+            MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx);
+            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, footmark->red, footmark->green, footmark->blue,
                             footmark->alpha >> 8);
-            gSPDisplayList(POLY_OPA_DISP++, gCircleShadowDL);
+            gSPDisplayList(POLY_XLU_DISP++, gCircleShadowNewDL);
 
         }
     }
