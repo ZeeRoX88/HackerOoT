@@ -1089,6 +1089,17 @@ Gfx* sBootDListGroups[][2] = {
     { gLinkAdultLeftHoverBootDL, gLinkAdultRightHoverBootDL }, // PLAYER_BOOTS_HOVER
 };
 
+Color_RGB8 stupidColor2; // is not initialized, so set it to something
+
+Gfx* Player_PrimColorDlist(GraphicsContext* gfxCtx) {
+    Gfx* dList = GRAPH_ALLOC(gfxCtx, sizeof(Gfx) * 2);
+    Gfx* dListHead = dList;
+    
+    gDPSetPrimColor(dListHead++, 0, 0x80, stupidColor2.r, stupidColor2.g, stupidColor2.b, 255);
+    gSPEndDisplayList(dListHead++);
+    return dList;
+}
+
 void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dListCount, s32 lod, s32 tunic, s32 boots,
                      s32 face, OverrideLimbDrawOpa overrideLimbDraw, PostLimbDrawOpa postLimbDraw, void* data) {
     Color_RGB8* color;
@@ -1132,6 +1143,10 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
 
     stupidColor = sTunicColors[tunic];
 
+    stupidColor2.r = 255;
+    stupidColor2.g = 255;
+    stupidColor2.b = 255;
+
     // wet water stuff here
     if (this->wetTimer > 0) {
         f32 colorBlend = this->wetTimer * 0.003f;
@@ -1139,8 +1154,15 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
         stupidColor.r = LERP(sTunicColors[tunic].r, 0, colorBlend);
         stupidColor.g = LERP(sTunicColors[tunic].g, 0, colorBlend);
         stupidColor.b = LERP(sTunicColors[tunic].b, 0, colorBlend);
+
+        stupidColor2.r = LERP(255, 0, colorBlend);
+        stupidColor2.g = LERP(255, 0, colorBlend);
+        stupidColor2.b = LERP(255, 0, colorBlend);
     }
     gDPSetEnvColor(POLY_OPA_DISP++, stupidColor.r, stupidColor.g, stupidColor.b, 0);
+
+    // segment for wet color of other parts, needs to be added to player model
+    gSPSegment(POLY_OPA_DISP++, 0x0A, Player_PrimColorDlist(play->state.gfxCtx));
 
     sDListsLodOffset = lod * 2;
 
