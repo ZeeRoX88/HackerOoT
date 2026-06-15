@@ -207,9 +207,6 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
         actor->shape.feetFloorFlag = 0;
         spB8 = 2;
 
-        /* Debug_Print(1, "%.3f speed", actor->speed);
-        Debug_Print_Draw(1, play); */
-
         for (i = 0; i < ARRAY_COUNT(floorHeight); i++, spB8 >>= 1) {
             feetPosPtr->y += 50.0f;
             // *floorHeightPtr = func_800BFCB8(play, &floorMtx, feetPosPtr);
@@ -218,18 +215,21 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
             distToFloor = feetPosPtr->y - *floorHeightPtr;
 
             if ((distToFloor >= -1.0f) && (distToFloor < 500.0f)) {
-                if (distToFloor <= 4.0f) {
+                if ((distToFloor <= 4.0f)) { // Child Link doesn't really work well here, so it needs the player stuff
                     actor->shape.feetFloorFlag |= spB8; // set
 
                     if ((actor->depthInWater < 0.0f) && (bgId == BGCHECK_SCENE) && (actor->shape.feetFloorSetFlag & spB8) && (actor->category == ACTORCAT_PLAYER)) {
                         Player* player = GET_PLAYER(play);
                         if (1/* SurfaceType_HasMaterialProperty(&play->colCtx, poly, bgId,
                                                             MATERIAL_PROPERTY_SOFT_IMPRINT) */) {
-                            SkinMatrix_MtxFCopy(&floorMtx, &spFC);
-                            SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
-                            // not sure if it is good to use the IREG
-                            /* EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
-                                            IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
+                            if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (player->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
+                                SkinMatrix_MtxFCopy(&floorMtx, &spFC);
+                                SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
+                                /* EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
+                                                IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
+                                EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
+                                                0, 0, 0, 30000, 200, 60);
+                            }
                             if ((LINK_IS_CHILD && actor->speed > 5.4f && actor->speed < 5.6f) || (actor->speed > 5.9f && actor->speed < 6.1f)) {
                                 Vec3f velocity = { 0.0f, 1.0f, 0.0f };
                                 Vec3f accel = { 0.0f, 0.0f, 0.0f };

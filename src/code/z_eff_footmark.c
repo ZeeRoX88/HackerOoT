@@ -14,6 +14,7 @@
 #include "array_count.h"
 
 // #include "assets/code/eff_footmark/eff_footmark.c"
+#include "assets/objects/gameplay_keep/gameplay_keep.h"
 // add assets here
 
 #define CHECK_FLAG_ALL(flags, mask) (((flags) & (mask)) == (mask))
@@ -119,23 +120,34 @@ void EffFootmark_Draw(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx);
 
-    // Gfx_SetupDL44_Xlu(play->state.gfxCtx); // doesn't exist in OoT
+    POLY_OPA_DISP = Gfx_SetupDL(POLY_OPA_DISP, SETUPDL_44);
+    gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_THRESHOLD);
 
-    /* gSPDisplayList(POLY_XLU_DISP++, gEffFootprintMaterialDL);
+    gDPSetCombineLERP(POLY_OPA_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED, 0, 0, 0, COMBINED);
+
+    // Gfx_SetupDL_44Xlu(play->state.gfxCtx);
+
+    // gSPDisplayList(POLY_XLU_DISP++, gEffFootprintMaterialDL);
 
     for (footmark = play->footprintInfo, i = 0; i < ARRAY_COUNT(play->footprintInfo); i++, footmark++) {
         if (footmark->actor != NULL) {
             Matrix_Put(&footmark->mf);
             Matrix_Scale(footmark->size * (1.0f / 0x100) * 0.7f, 1, footmark->size * (1.0f / 0x100), MTXMODE_APPLY);
 
-            MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx);
+            /* MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx);
 
             gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, footmark->red, footmark->green, footmark->blue,
                             footmark->alpha >> 8);
 
-            gSPDisplayList(POLY_XLU_DISP++, gEffFootprintModelDL);
+            gSPDisplayList(POLY_XLU_DISP++, gEffFootprintModelDL); */
+
+            MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, play->state.gfxCtx);
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, footmark->red, footmark->green, footmark->blue,
+                            footmark->alpha >> 8);
+            gSPDisplayList(POLY_OPA_DISP++, gCircleShadowDL);
+
         }
-    } */
+    }
 
     CLOSE_DISPS(play->state.gfxCtx);
 }
