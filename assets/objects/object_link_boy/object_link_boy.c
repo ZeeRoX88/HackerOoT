@@ -696,11 +696,11 @@ Gfx gLinkAdultMirrorShieldAndSheathNearDL[127] = {
 #include "assets/objects/object_link_boy/gLinkAdultMirrorShieldAndSheathNearDL.inc.c"
 };
 
-Gfx gLinkAdultLeftHandNearDL[72] = {
+Gfx gLinkAdultLeftHandNearDL[] = {
 #include "assets/objects/object_link_boy/gLinkAdultLeftHandNearDL.inc.c"
 };
 
-Gfx gLinkAdultLeftHandClosedNearDL[82] = {
+Gfx gLinkAdultLeftHandClosedNearDL[] = {
 #include "assets/objects/object_link_boy/gLinkAdultLeftHandClosedNearDL.inc.c"
 };
 
@@ -708,11 +708,11 @@ Gfx gLinkAdultLeftHandHoldingMasterSwordNearDL[164] = {
 #include "assets/objects/object_link_boy/gLinkAdultLeftHandHoldingMasterSwordNearDL.inc.c"
 };
 
-Gfx gLinkAdultRightHandNearDL[73] = {
+Gfx gLinkAdultRightHandNearDL[] = {
 #include "assets/objects/object_link_boy/gLinkAdultRightHandNearDL.inc.c"
 };
 
-Gfx gLinkAdultRightHandClosedNearDL[82] = {
+Gfx gLinkAdultRightHandClosedNearDL[] = {
 #include "assets/objects/object_link_boy/gLinkAdultRightHandClosedNearDL.inc.c"
 };
 
@@ -1202,7 +1202,7 @@ Gfx gLinkAdultTorsoNearDL[70] = {
 #include "assets/objects/object_link_boy/gLinkAdultTorsoNearDL.inc.c"
 };
 
-Gfx gLinkAdultHeadNearDL[233] = {
+Gfx gLinkAdultHeadNearDL[] = {
 #include "assets/objects/object_link_boy/gLinkAdultHeadNearDL.inc.c"
 };
 
