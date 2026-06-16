@@ -1159,16 +1159,16 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
         stupidColor2.g = LERP(255, 0, colorBlend);
         stupidColor2.b = LERP(255, 0, colorBlend);
 
-        if ((((this->wetTimer % 5) == 0)) && this->wetTimer < 200 && this->actor.speed <= 2.0f) {
+        if ((((this->wetTimer % 5) == 0)) && this->wetTimer > 100 && this->wetTimer < 200 && this->actor.speed <= 2.0f) {
             static Color_RGBA8 sEffectPrimColor = { 150, 150, 150, 200 };
             static Color_RGBA8 sEffectEnvColor = { 120, 120, 120, 0 };
             Vec3f effectPos;
-            Vec3f effectVelocity = { 0.0f, -0.1f, 0.0f };
-            Vec3f effectAccel = { 0.0f, -0.25f, 0.0f };
+            Vec3f effectVelocity = { 0.0f, -0.25f, 0.0f };
+            Vec3f effectAccel = { 0.0f, -0.4f, 0.0f };
             
             effectPos = this->bodyPartsPos[Rand_S16Offset(0, PLAYER_BODYPART_MAX)];
             EffectSsDtBubble_SpawnCustomColor(play, &effectPos, &effectVelocity, &effectAccel, &sEffectPrimColor,
-                                          &sEffectEnvColor, 30, 15, 0);
+                                          &sEffectEnvColor, 30, 14, 0);
         }
     }
     gDPSetEnvColor(POLY_OPA_DISP++, stupidColor.r, stupidColor.g, stupidColor.b, 0);
