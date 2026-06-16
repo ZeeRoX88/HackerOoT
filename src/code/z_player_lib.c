@@ -1164,8 +1164,8 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
             static Color_RGBA8 sEffectEnvColor = { 120, 120, 120, 0 };
             Vec3f effectPos;
             Vec3f effectVelocity = { 0.0f, -0.1f, 0.0f };
-            Vec3f effectAccel = { 0.0f, -0.2f, 0.0f };
-
+            Vec3f effectAccel = { 0.0f, -0.25f, 0.0f };
+            
             effectPos = this->bodyPartsPos[Rand_S16Offset(0, PLAYER_BODYPART_MAX)];
             EffectSsDtBubble_SpawnCustomColor(play, &effectPos, &effectVelocity, &effectAccel, &sEffectPrimColor,
                                           &sEffectEnvColor, 30, 15, 0);
