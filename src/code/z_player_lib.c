@@ -1089,13 +1089,15 @@ Gfx* sBootDListGroups[][2] = {
     { gLinkAdultLeftHoverBootDL, gLinkAdultRightHoverBootDL }, // PLAYER_BOOTS_HOVER
 };
 
-Color_RGB8 stupidColor2; // is not initialized, so set it to something
+// lerp colors when Link is wet
+Color_RGB8 wetPrimColor = { 255, 255, 255};
+Color_RGB8 wetEnvColor;
 
 Gfx* Player_PrimColorDlist(GraphicsContext* gfxCtx) {
     Gfx* dList = GRAPH_ALLOC(gfxCtx, sizeof(Gfx) * 2);
     Gfx* dListHead = dList;
     
-    gDPSetPrimColor(dListHead++, 0, 0x80, stupidColor2.r, stupidColor2.g, stupidColor2.b, 255);
+    gDPSetPrimColor(dListHead++, 0, 0x80, wetPrimColor.r, wetPrimColor.g, wetPrimColor.b, 255);
     gSPEndDisplayList(dListHead++);
     return dList;
 }
@@ -1136,44 +1138,49 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
     gSPSegment(POLY_OPA_DISP++, 0x09, SEGMENTED_TO_VIRTUAL(sMouthTextures[gSaveContext.save.linkAge][mouthIndex]));
 #endif
 
-    color = &sTunicColors[tunic];
-
     Player* this = GET_PLAYER(play);
-    Color_RGB8 stupidColor;
 
-    stupidColor = sTunicColors[tunic];
+    wetEnvColor = sTunicColors[tunic];
 
-    stupidColor2.r = 255;
-    stupidColor2.g = 255;
-    stupidColor2.b = 255;
-
-    // wet water stuff here
+    // change tunic and primcolor when Link is wet
     if (this->wetTimer > 0) {
         f32 colorBlend = this->wetTimer * 0.003f;
 
-        stupidColor.r = LERP(sTunicColors[tunic].r, 0, colorBlend);
-        stupidColor.g = LERP(sTunicColors[tunic].g, 0, colorBlend);
-        stupidColor.b = LERP(sTunicColors[tunic].b, 0, colorBlend);
+        wetEnvColor.r = LERP(sTunicColors[tunic].r, 0, colorBlend);
+        wetEnvColor.g = LERP(sTunicColors[tunic].g, 0, colorBlend);
+        wetEnvColor.b = LERP(sTunicColors[tunic].b, 0, colorBlend);
 
-        stupidColor2.r = LERP(255, 0, colorBlend);
-        stupidColor2.g = LERP(255, 0, colorBlend);
-        stupidColor2.b = LERP(255, 0, colorBlend);
+        wetPrimColor.r = LERP(255, 0, colorBlend);
+        wetPrimColor.g = LERP(255, 0, colorBlend);
+        wetPrimColor.b = LERP(255, 0, colorBlend);
 
-        if ((((this->wetTimer % 5) == 0)) && this->wetTimer > 100 && this->wetTimer < 200 && this->actor.speed <= 2.0f) {
-            static Color_RGBA8 sEffectPrimColor = { 150, 150, 150, 200 };
+        // spawn water droplets when Link is wet & outside of water
+        if ((((this->wetTimer % 5) == 1)) && this->wetTimer > 100 && this->actor.speed <= 2.0f) {
+            u8 bodyPartIndex[] = { PLAYER_BODYPART_WAIST, PLAYER_BODYPART_HEAD, PLAYER_BODYPART_TORSO, PLAYER_BODYPART_HAT,
+                                   PLAYER_BODYPART_L_SHOULDER, PLAYER_BODYPART_L_FOREARM, PLAYER_BODYPART_L_HAND,
+                                   PLAYER_BODYPART_R_SHOULDER, PLAYER_BODYPART_R_FOREARM, PLAYER_BODYPART_R_HAND };
+            static Color_RGBA8 sEffectPrimColor = { 150, 150, 150, 230 };
             static Color_RGBA8 sEffectEnvColor = { 120, 120, 120, 0 };
             Vec3f effectPos;
             Vec3f effectVelocity = { 0.0f, -0.25f, 0.0f };
             Vec3f effectAccel = { 0.0f, -0.4f, 0.0f };
+            u8 randBodyPartIndex = Rand_S16Offset(0, 10);
             
-            effectPos = this->bodyPartsPos[Rand_S16Offset(0, PLAYER_BODYPART_MAX)];
+            effectPos = this->bodyPartsPos[bodyPartIndex[randBodyPartIndex]];
+            
+            if (randBodyPartIndex < 3) {
+                effectPos.x += (f32)Rand_S16Offset(-6, 12);
+                effectPos.z += (f32)Rand_S16Offset(-6, 12);
+            }
+
             EffectSsDtBubble_SpawnCustomColor(play, &effectPos, &effectVelocity, &effectAccel, &sEffectPrimColor,
                                           &sEffectEnvColor, 30, 14, 0);
         }
     }
-    gDPSetEnvColor(POLY_OPA_DISP++, stupidColor.r, stupidColor.g, stupidColor.b, 0);
+    color = &wetEnvColor;
+    gDPSetEnvColor(POLY_OPA_DISP++, color->r, color->g, color->b, 0);
 
-    // segment for wet color of other parts, needs to be added to player model
+    // segment call for wet primcolor in other materials, needs to be added to player model
     gSPSegment(POLY_OPA_DISP++, 0x0A, Player_PrimColorDlist(play->state.gfxCtx));
 
     sDListsLodOffset = lod * 2;
