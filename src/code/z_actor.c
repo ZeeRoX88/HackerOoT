@@ -212,22 +212,25 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
             feetPosPtr->y += 50.0f;
             // *floorHeightPtr = func_800BFCB8(play, &floorMtx, feetPosPtr);
             *floorHeightPtr = Play_GetFloorSurfaceImpl(play, &floorMtx, &poly, &bgId, feetPosPtr);
-            feetPosPtr->y -= 50.0f;
+            if (LINK_IS_CHILD) { // wonky offset because child link doesn't lift his feet high enough
+                feetPosPtr->y -= 47.5f;
+            } else {
+                feetPosPtr->y -= 50.5f;
+            }
             distToFloor = feetPosPtr->y - *floorHeightPtr;
 
             if ((distToFloor >= -1.0f) && (distToFloor < 500.0f)) {
-                if ((distToFloor <= 4.0f)) { // Child Link doesn't really work well here, so it needs the player stuff
+                if ((distToFloor <= 4.0f)) { // <= 10.0f
                     actor->shape.feetFloorFlag |= spB8; // set
 
                     if ((actor->depthInWater < 0.0f) && (bgId == BGCHECK_SCENE) && (actor->shape.feetFloorSetFlag & spB8) && (actor->category == ACTORCAT_PLAYER)) {
                         Player* player = GET_PLAYER(play);
                         if (1/* SurfaceType_HasMaterialProperty(&play->colCtx, poly, bgId,
                                                             MATERIAL_PROPERTY_SOFT_IMPRINT) */) {
+                            // maybe use floorHeightPtr for effect pos.y
                             if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (player->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
                                 SkinMatrix_MtxFCopy(&floorMtx, &spFC);
                                 SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
-                                /* EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
-                                                IREG(88) + 80, IREG(89) + 60, IREG(90) + 40, 30000, 200, 60); */
                                 EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
                                                 80, 60, 40, 30000, 200, 60);
                             } else if (player->wetTimer > 0) {
@@ -241,15 +244,15 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                                 Vec3f accel = { 0.0f, 0.0f, 0.0f };
 
                                 if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (player->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
-                                    func_800286CC(play, feetPosPtr, &velocity, &accel, 50, 30);
+                                    func_800286CC(play, feetPosPtr, &velocity, &accel, 40, 20);
                                 } else if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
                                     Player_SpawnGrassBlade(play, feetPosPtr, &velocity, &accel, 4, 15);
                                 }
                             }
                         }
-                        actor->shape.feetFloorSetFlag &= ~spB8; // unset? when is this ever set??? this shit is set inside MM player
+                        actor->shape.feetFloorSetFlag &= ~spB8; // unset, in MM only set inside player.c
                     }
-                } else {
+                } else { // but we set it here
                     if (!(actor->shape.feetFloorSetFlag & spB8)) {
                         actor->shape.feetFloorSetFlag |= spB8;
                     }

@@ -124,7 +124,9 @@ void EffFootmark_Draw(PlayState* play) {
     Gfx_SetupDL_44Xlu(play->state.gfxCtx);
     gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
 
-    gDPSetCombineLERP(POLY_XLU_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED, 0, 0, 0, COMBINED);
+    // set combiner to use lighting shade
+    // gDPSetCombineLERP(POLY_XLU_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED, 0, 0, 0, COMBINED);
+    gDPSetCombineLERP(POLY_XLU_DISP++, TEXEL0, 0, SHADE, 0, 0, 0, 0, TEXEL0, COMBINED, 0, PRIMITIVE, 0, COMBINED, 0, PRIMITIVE, 0);
 
     // gSPDisplayList(POLY_XLU_DISP++, gEffFootprintMaterialDL);
 

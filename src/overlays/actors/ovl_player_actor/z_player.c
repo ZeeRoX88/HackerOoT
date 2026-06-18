@@ -8035,6 +8035,7 @@ s32 func_8084021C(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 }
 
 void func_8084029C(Player* this, f32 arg1) {
+    s32 sp24;
     f32 updateScale = R_UPDATE_RATE * 0.5f;
 
     arg1 *= updateScale;
@@ -8044,16 +8045,20 @@ void func_8084029C(Player* this, f32 arg1) {
         arg1 = 7.25f;
     }
 
-    if (1) {}
+    // footmark MM addition, but we don't use it
+    sp24 = func_8084021C(this->unk_868, arg1, 29.0f, 9.0f); // 25.0f, 9.0f
 
     if ((this->currentBoots == PLAYER_BOOTS_HOVER) && !(this->actor.bgCheckFlags & BGCHECKFLAG_GROUND) &&
         (this->hoverBootsTimer != 0)) {
         Actor_PlaySfx_Flagged2(&this->actor, NA_SE_PL_HOBBERBOOTS_LV - SFX_FLAG);
-    } else if (func_8084021C(this->unk_868, arg1, 29.0f, 10.0f) || func_8084021C(this->unk_868, arg1, 29.0f, 24.0f)) {
+    } else if (sp24 || func_8084021C(this->unk_868, arg1, 29.0f, 24.0f)) {  // 25.0f, 24.0f
         Player_PlaySteppingSfx(this, this->speedXZ);
         if (this->speedXZ > 4.0f) {
             this->stateFlags2 |= PLAYER_STATE2_3;
         }
+        /* if (LINK_IS_CHILD) {
+            this->actor.shape.feetFloorSetFlag = sp24 ? 1 : 2;
+        } */
     }
 
     this->unk_868 += arg1;
