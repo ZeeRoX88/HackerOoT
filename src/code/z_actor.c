@@ -215,7 +215,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
             if (LINK_IS_CHILD) { // wonky offset because child link doesn't lift his feet high enough
                 feetPosPtr->y -= 47.5f;
             } else {
-                feetPosPtr->y -= 50.5f;
+                feetPosPtr->y -= 50.0f;
             }
             distToFloor = feetPosPtr->y - *floorHeightPtr;
 
