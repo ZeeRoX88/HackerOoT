@@ -8961,10 +8961,10 @@ s32 func_8084269C(PlayState* play, Player* this) {
     if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
         func_8084260C(&this->actor.shape.feetPos[FOOT_LEFT], &sp2C,
                       this->actor.floorHeight - this->actor.shape.feetPos[FOOT_LEFT].y, 7.0f, 5.0f);
-        Player_SpawnGrassBlade(play, &sp2C, &D_808545B4, &D_808545C0, 6, 20);
+        Player_SpawnGrassBlade(play, &sp2C, &D_808545B4, &D_808545C0, 6, LINK_IS_CHILD ? 15 : 20);
         func_8084260C(&this->actor.shape.feetPos[FOOT_RIGHT], &sp2C,
                       this->actor.floorHeight - this->actor.shape.feetPos[FOOT_RIGHT].y, 7.0f, 5.0f);
-        Player_SpawnGrassBlade(play, &this->actor.shape.feetPos[FOOT_RIGHT], &D_808545B4, &D_808545C0, 6, 20);
+        Player_SpawnGrassBlade(play, &this->actor.shape.feetPos[FOOT_RIGHT], &D_808545B4, &D_808545C0, 6, LINK_IS_CHILD ? 15 : 20);
         return 1;
     }
 
@@ -9600,32 +9600,40 @@ void Player_SpawnVelocityDust(PlayState* play, Player* this, s32 amountMinusOne,
         angle = this->actor.shape.rot.y + 0x4600;
     } else if (direction == 3) {
         angle = this->actor.shape.rot.y - 0x4600;
+    } else if (direction == 0) {
+        angle = this->actor.shape.rot.y - 0x600;
+    } else if (direction == 2) {
+        angle = this->actor.shape.rot.y - 0x8600;
     }
     pos.y = this->actor.floorHeight;
 
     for (i = amountMinusOne; i >= 0; i--) {
         velocity.y = Rand_ZeroOne() + 0.25f;
-        pos.x = Math_SinS(angle) * 15.0f + this->actor.world.pos.x;
-        pos.z = Math_CosS(angle) * 15.0f + this->actor.world.pos.z;
-        velocity.x = Math_SinS(angle) * 2.5f;
-        velocity.z = Math_CosS(angle) * 2.5f;
+        pos.x = Math_SinS(this->actor.shape.rot.y + 0x4000) * 7.0f + this->actor.world.pos.x;
+        pos.z = Math_CosS(this->actor.shape.rot.y + 0x4000) * 7.0f + this->actor.world.pos.z;
+        /* velocity.x = Math_SinS(angle) * 2.5f;
+        velocity.z = Math_CosS(angle) * 2.5f; */
+        /* pos.x = this->actor.shape.feetPos[0].x;
+        pos.z = this->actor.shape.feetPos[0].z; */
 
-        /* velocity.x = this->actor.velocity.x * 0.25f;
-        velocity.z = this->actor.velocity.z * 0.25f; */
+        velocity.x = this->actor.velocity.x * 0.25f;
+        velocity.z = this->actor.velocity.z * 0.25f;
 
         if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (this->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
             func_800286CC(play, &pos, &velocity, &accel, 50, 30);
         } else if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
-            Player_SpawnGrassBlade(play, &pos, &velocity, &accel, 6, 20);
+            Player_SpawnGrassBlade(play, &pos, &velocity, &accel, 6, LINK_IS_CHILD ? 15 : 20);
         }
 
-        pos.x = this->actor.world.pos.x;
-        pos.z = this->actor.world.pos.z;
+        pos.x = Math_SinS(this->actor.shape.rot.y - 0x4000) * 7.0f + this->actor.world.pos.x;
+        pos.z = Math_CosS(this->actor.shape.rot.y - 0x4000) * 7.0f + this->actor.world.pos.z;
+        /* pos.x = this->actor.shape.feetPos[1].x;
+        pos.z = this->actor.shape.feetPos[1].z; */
 
         if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (this->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
             func_800286CC(play, &pos, &velocity, &accel, 50, 30);
         } else if ((this->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
-            Player_SpawnGrassBlade(play, &pos, &velocity, &accel, 6, 20);
+            Player_SpawnGrassBlade(play, &pos, &velocity, &accel, 6, LINK_IS_CHILD ? 15 : 20);
         }
 
         angle += 0x600;
@@ -9714,11 +9722,11 @@ void Player_Action_8084411C(Player* this, PlayState* play) {
         LinkAnimationHeader* anim = GET_PLAYER_ANIM(PLAYER_ANIMGROUP_landing, this->modelAnimType);
         s32 sp3C;
 
-        if (this->av1.actionVar1 != 0 && this->av1.actionVar1 != 2) { // 1 left, 2 back, 3 right, 0 normak
+        // if (this->av1.actionVar1 != 0 && this->av1.actionVar1 != 2) { // 1 left, 2 back, 3 right, 0 normak
             Player_SpawnVelocityDust(play, this, 2, 0.0f, 0, 0, this->av1.actionVar1);
-        } else { // front
+        /* } else { // front
             Actor_SpawnOkamiFloorDustRing(play, &this->actor, &this->actor.world.pos, 5.0f, 7, 0.0f, 0, 0, true);
-        }
+        } */
 
         if (this->stateFlags2 & PLAYER_STATE2_19) {
             if (Player_CheckHostileLockOn(this)) {

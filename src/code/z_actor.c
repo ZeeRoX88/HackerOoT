@@ -228,6 +228,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                         if (1/* SurfaceType_HasMaterialProperty(&play->colCtx, poly, bgId,
                                                             MATERIAL_PROPERTY_SOFT_IMPRINT) */) {
                             // maybe use floorHeightPtr for effect pos.y
+                            feetPosPtr->y = *floorHeightPtr;
                             if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (player->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
                                 SkinMatrix_MtxFCopy(&floorMtx, &spFC);
                                 SkinMatrix_MulYRotation(&spFC, actor->shape.rot.y);
@@ -244,9 +245,9 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                                 Vec3f accel = { 0.0f, 0.0f, 0.0f };
 
                                 if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_DIRT) || (player->floorSfxOffset == SURFACE_SFX_OFFSET_SAND)) {
-                                    func_800286CC(play, feetPosPtr, &velocity, &accel, 40, 20);
+                                    func_800287AC(play, feetPosPtr, &velocity, &accel, 40, 20, 8);
                                 } else if ((player->floorSfxOffset == SURFACE_SFX_OFFSET_GRASS)) {
-                                    Player_SpawnGrassBlade(play, feetPosPtr, &velocity, &accel, 4, 15);
+                                    Player_SpawnGrassBlade(play, feetPosPtr, &velocity, &accel, 4, LINK_IS_CHILD ? 10 : 15);
                                 }
                             }
                         }
