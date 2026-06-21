@@ -308,7 +308,7 @@ Gfx* sSkyboxStarsDList;
 s32 sEnvSkyboxNumStars = 0;
 f32 sStarAlpha;
 u8 sCloudDensity = 16;
-static u8 weatherModeTest;
+u8 weatherModeTest = 0;
 
 enum {
     WEATHER_EVENT_SUNNY,
