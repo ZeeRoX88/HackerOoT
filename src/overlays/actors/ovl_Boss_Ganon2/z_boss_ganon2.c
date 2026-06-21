@@ -2987,6 +2987,7 @@ void func_80904D88(BossGanon2* this, PlayState* play) {
 
     if (this->unk_30C > 0.0f) {
         Gfx_SetupDL_25Xlu(gameState->gfxCtx);
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
         if (this->unk_380 > 0.0f) {
             gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 255, 255, 170, 255);
             gDPSetEnvColor(POLY_XLU_DISP++, 255, 200, 0, 0);
@@ -3016,6 +3017,8 @@ void func_80904FC8(BossGanon2* this, PlayState* play) {
 
     if (this->unk_384 > 0.0f) {
         Gfx_SetupDL_25Xlu(gameState->gfxCtx);
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
+
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 255, 255, 255, 200);
         gDPSetEnvColor(POLY_XLU_DISP++, 255, 200, 0, 0);
         gSPDisplayList(POLY_XLU_DISP++, gGanonLightOrbMaterialDL);
@@ -3046,6 +3049,8 @@ void func_8090523C(BossGanon2* this, PlayState* play) {
 
         player = GET_PLAYER(play);
         Gfx_SetupDL_25Xlu(gameState->gfxCtx);
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
+        
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 255, 255, 255, (s16)this->unk_38C);
         gDPSetEnvColor(POLY_XLU_DISP++, 0, 255, 255, 0);
         gSPDisplayList(POLY_XLU_DISP++, gGanonLightOrbMaterialDL);
@@ -3293,6 +3298,7 @@ void BossGanon2_DrawEffects(PlayState* play) {
             s32 pad;
 
             Gfx_SetupDL_25Xlu(play->state.gfxCtx);
+            gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
             spA0.x = play->envCtx.dirLight1.params.dir.x;
             spA0.y = play->envCtx.dirLight1.params.dir.y;
             spA0.z = play->envCtx.dirLight1.params.dir.z;
@@ -3451,6 +3457,8 @@ void BossGanon2_DrawShadowTexture(void* shadowTexture, BossGanon2* this, PlaySta
     OPEN_DISPS(gfxCtx, "../z_boss_ganon2.c", 6430);
 
     Gfx_SetupDL_25Opa(gameState->gfxCtx);
+
+    gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_THRESHOLD);
 
     if ((play->envCtx.lightSetting == 1) || (play->envCtx.lightSetting == 2)) {
         alpha = (s16)(play->envCtx.lightBlend * 180.0f) + 30;

@@ -466,8 +466,8 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
     s16 i;
     u8 skybox1Index;
     u8 skybox2Index;
-    s32 pad;
     s32 skyboxConfig;
+    u32 offset;
 
     switch (skyboxId) {
         case SKYBOX_NORMAL_SKY:
@@ -516,7 +516,6 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
 
             // this loads the actual texture
             // you need the texture offset!
-            u32 offset;
             if ((gSaveContext.save.totalDays % 8) != 4) {
                 offset = size * (gSaveContext.save.totalDays % 8);
                 DMA_REQUEST_SYNC(skyboxCtx->staticSegments[0], (uintptr_t)_moon_staticSegmentRomStart + offset, size,
@@ -576,7 +575,6 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
 
             // this loads the actual texture
             // you need the texture offset!
-            u32 offset;
             if ((gSaveContext.save.totalDays % 8) != 4) {
                 offset = size * (gSaveContext.save.totalDays % 8);
                 DMA_REQUEST_SYNC(skyboxCtx->staticSegments[0], (uintptr_t)_moon_staticSegmentRomStart + offset, size,
