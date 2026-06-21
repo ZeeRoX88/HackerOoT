@@ -2129,9 +2129,6 @@ void Environment_DrawSunAndMoon(PlayState* play) {
         gsSPLoadGeometryMode(G_CULL_BACK),
         gsDPSetCombineLERP(PRIMITIVE, ENVIRONMENT, TEXEL0, ENVIRONMENT, PRIMITIVE, 0, TEXEL0, 0, 0, 0, 0, COMBINED, 0,
                            0, 0, COMBINED),
-        gsDPSetOtherMode(G_AD_NOTPATTERN | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE | G_TL_TILE |
-                             G_TD_CLAMP | G_TP_PERSP | G_CYC_2CYCLE | G_PM_NPRIMITIVE,
-                         G_AC_THRESHOLD | G_ZS_PIXEL | G_RM_FOG_PRIM_A | G_RM_XLU_SURF2),
         gsSPVertex(&moonVtx[0], 4, 0),
         gsSP2Triangles(0, 1, 2, 0, 1, 3, 2, 0),
         gsSPEndDisplayList(),
@@ -2224,6 +2221,10 @@ void Environment_DrawSunAndMoon(PlayState* play) {
             gSPSegment(POLY_OPA_DISP++, 0x7, play->skyboxCtx.staticSegments[0]);
             gSPSegment(POLY_OPA_DISP++, 0x8, play->skyboxCtx.staticSegments[1]);
 
+            gDPSetOtherMode(POLY_OPA_DISP++, G_AD_NOTPATTERN | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE | G_TL_TILE |
+                             G_TD_CLAMP | G_TP_PERSP | G_CYC_2CYCLE | G_PM_NPRIMITIVE,
+                             G_AC_THRESHOLD | G_ZS_PIXEL | G_RM_FOG_PRIM_A | G_RM_XLU_SURF2);
+
             gSPMatrix(POLY_OPA_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_kankyo.c", 2406), G_MTX_LOAD);
             gDPPipeSync(POLY_OPA_DISP++);
             gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, alpha);
@@ -2234,14 +2235,17 @@ void Environment_DrawSunAndMoon(PlayState* play) {
                              G_TX_MIRROR | G_TX_WRAP, 6, 6, G_TX_NOLOD, G_TX_NOLOD);
             gSPDisplayList(POLY_OPA_DISP++, sMoonDL);
 
-            // moon glow, looks like shit during brighter backgrounds
+            // moon glow
 
             Matrix_Scale(1.4f, 1.4f, 1.4f, MTXMODE_APPLY);
 
             gSPMatrix(POLY_OPA_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_kankyo.c", 2406), G_MTX_LOAD);
             gDPPipeSync(POLY_OPA_DISP++);
-            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, 100);
-            gDPSetEnvColor(POLY_OPA_DISP++, 0, 0, 0, 0);
+
+            alpha = CLAMP((alpha >> 1) - 27 , 0, 100);
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, alpha);
+
+            gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_NONE);
 
             gSPTexture(POLY_OPA_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
             gDPLoadTextureBlock(POLY_OPA_DISP++, play->skyboxCtx.staticSegments[1], G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
