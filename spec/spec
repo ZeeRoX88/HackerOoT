@@ -5112,6 +5112,13 @@ beginseg
 endseg
 
 beginseg
+    name "moon_static"
+    compress
+    romalign 0x1000
+    include "$(BUILD_DIR)/assets/textures/moon_static/moon_static.o"
+endseg
+
+beginseg
     name "elf_message_field"
     compress
     romalign 0x1000

@@ -496,7 +496,7 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
                 }
             }
 
-            //
+            // new skybox static
             size = (uintptr_t)_new_skybox_staticSegmentRomEnd - (uintptr_t)_new_skybox_staticSegmentRomStart;
             skyboxCtx->skyboxStaticSegment = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1226);
 
@@ -506,23 +506,36 @@ void Skybox_Setup(PlayState* play, SkyboxContext* skyboxCtx, s16 skyboxId) {
             DMA_REQUEST_SYNC(skyboxCtx->skyboxStaticSegment, (uintptr_t)_new_skybox_staticSegmentRomStart, size,
                              "../z_vr_box.c", 1228);
 
-            /* size = gNormalSkyFiles[skybox1Index].file.vromEnd - gNormalSkyFiles[skybox1Index].file.vromStart;
+            // moon static
+            // moon base
+            size = 0x1000; // size of 64x64 ia8 texture
+            // this allocates mem
             skyboxCtx->staticSegments[0] = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1054);
             ASSERT(skyboxCtx->staticSegments[0] != NULL, "vr_box->vr_box_staticSegment[0] != NULL", "../z_vr_box.c",
                    1055);
 
-            DMA_REQUEST_SYNC(skyboxCtx->staticSegments[0], gNormalSkyFiles[skybox1Index].file.vromStart, size,
-                             "../z_vr_box.c", 1058);
+            // this loads the actual texture
+            // you need the texture offset!
+            u32 offset;
+            if ((gSaveContext.save.totalDays % 8) != 4) {
+                offset = size * (gSaveContext.save.totalDays % 8);
+                DMA_REQUEST_SYNC(skyboxCtx->staticSegments[0], (uintptr_t)_moon_staticSegmentRomStart + offset, size,
+                                 __FILE__, __LINE__);
+            }
 
-            size = gNormalSkyFiles[skybox2Index].file.vromEnd - gNormalSkyFiles[skybox2Index].file.vromStart;
+            // moon glow
+            size = 0x1000; // size of 64x64 ia8 texture
             skyboxCtx->staticSegments[1] = GAME_STATE_ALLOC(&play->state, size, "../z_vr_box.c", 1060);
             ASSERT(skyboxCtx->staticSegments[1] != NULL, "vr_box->vr_box_staticSegment[1] != NULL", "../z_vr_box.c",
                    1061);
 
-            DMA_REQUEST_SYNC(skyboxCtx->staticSegments[1], gNormalSkyFiles[skybox2Index].file.vromStart, size,
-                             "../z_vr_box.c", 1064);
+            if ((gSaveContext.save.totalDays % 8) != 4) {
+                offset = (size * 8) + (size * (gSaveContext.save.totalDays % 8));
+                DMA_REQUEST_SYNC(skyboxCtx->staticSegments[1], (uintptr_t)_moon_staticSegmentRomStart + offset, size,
+                                 __FILE__, __LINE__);
+            }
 
-            if ((skybox1Index & 1) ^ ((skybox1Index & 4) >> 2)) {
+            /* if ((skybox1Index & 1) ^ ((skybox1Index & 4) >> 2)) {
                 size = gNormalSkyFiles[skybox1Index].palette.vromEnd - gNormalSkyFiles[skybox1Index].palette.vromStart;
 
                 skyboxCtx->palettes = GAME_STATE_ALLOC(&play->state, size * 2, "../z_vr_box.c", 1072);

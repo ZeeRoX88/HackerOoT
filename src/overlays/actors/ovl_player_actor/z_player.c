@@ -9596,6 +9596,7 @@ void Player_SpawnVelocityDust(PlayState* play, Player* this, s32 amountMinusOne,
     s16 angle;
     s32 i;
 
+    // you could maybe use the actor velocity to determine the angle here for a single time
     if (direction == 1) {
         angle = this->actor.shape.rot.y + 0x4600;
     } else if (direction == 3) {

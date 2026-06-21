@@ -2198,6 +2198,7 @@ void Environment_DrawSunAndMoon(PlayState* play) {
             gSPDisplayList(POLY_OPA_DISP++, gSunDL);
         }
 
+        // maybe move this into the condition???
         Matrix_Translate(play->view.eye.x - play->envCtx.sunPos.x + 300.0f, play->view.eye.y - play->envCtx.sunPos.y - 380.0f,
                          play->view.eye.z - play->envCtx.sunPos.z + 300.0f, MTXMODE_NEW);
 
@@ -2205,6 +2206,7 @@ void Environment_DrawSunAndMoon(PlayState* play) {
         color = CLAMP_MIN(color, 0.0f);
 
         scale = -15.0f * color + 25.0f;
+        // maybe move this into the condition???
         Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
 
         temp = -y / 80.0f;
@@ -2213,30 +2215,37 @@ void Environment_DrawSunAndMoon(PlayState* play) {
         alpha = temp * 255.0f;
 
         if (alpha > 0 && (gSaveContext.save.totalDays % 8) != 4) {
-            static void* moonTexs[] = {gMoonTex, gMoonPhase01Tex, gMoonPhase02Tex, gMoonPhase03Tex, NULL, gMoonPhase03Tex, gMoonPhase02Tex, gMoonPhase01Tex};
-            u8 moonPhase = gSaveContext.save.totalDays % 8;
-            // moonPhase = 5;
 
             /* Debug_Print(0, "%.3f", play->envCtx.sunPos.y);
             Debug_Print_Draw(0, play); */
 
             //if moon is at a certain y height, start to lerp between skybox colors, y 1400 - y 900
 
+            gSPSegment(POLY_OPA_DISP++, 0x7, play->skyboxCtx.staticSegments[0]);
+            gSPSegment(POLY_OPA_DISP++, 0x8, play->skyboxCtx.staticSegments[1]);
+
             gSPMatrix(POLY_OPA_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_kankyo.c", 2406), G_MTX_LOAD);
             gDPPipeSync(POLY_OPA_DISP++);
             gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, alpha);
             gDPSetEnvColor(POLY_OPA_DISP++, play->skyboxCtx.skyboxTopColor[0], play->skyboxCtx.skyboxTopColor[1], play->skyboxCtx.skyboxTopColor[2], alpha);
-            gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(moonTexs[moonPhase]));
-
-            s16 moonUls = ((gSaveContext.save.totalDays % 8) > 4) ? 255 : 0;
-            // moonUls = 255;
 
             gSPTexture(POLY_OPA_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
-            gDPLoadTextureBlock(POLY_OPA_DISP++, 0x08000000, G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
+            gDPLoadTextureBlock(POLY_OPA_DISP++, play->skyboxCtx.staticSegments[0], G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
                              G_TX_MIRROR | G_TX_WRAP, 6, 6, G_TX_NOLOD, G_TX_NOLOD);
-            gDPSetTileSize(POLY_OPA_DISP++, G_TX_RENDERTILE, moonUls, moonUls,
-                           ((64)  - 1) << G_TEXTURE_IMAGE_FRAC,
-                           ((64) - 1) << G_TEXTURE_IMAGE_FRAC);
+            gSPDisplayList(POLY_OPA_DISP++, sMoonDL);
+
+            // moon glow, looks like shit during brighter backgrounds
+
+            Matrix_Scale(1.4f, 1.4f, 1.4f, MTXMODE_APPLY);
+
+            gSPMatrix(POLY_OPA_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_kankyo.c", 2406), G_MTX_LOAD);
+            gDPPipeSync(POLY_OPA_DISP++);
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, 100);
+            gDPSetEnvColor(POLY_OPA_DISP++, 0, 0, 0, 0);
+
+            gSPTexture(POLY_OPA_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
+            gDPLoadTextureBlock(POLY_OPA_DISP++, play->skyboxCtx.staticSegments[1], G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
+                             G_TX_MIRROR | G_TX_WRAP, 6, 6, G_TX_NOLOD, G_TX_NOLOD);
             gSPDisplayList(POLY_OPA_DISP++, sMoonDL);
         }
     }
@@ -2942,6 +2951,18 @@ void Environment_PlayTimeBasedSequence(PlayState* play) {
                 }
 
                 play->envCtx.timeSeqState++;
+
+                // moon stuff
+                u32 size = 0x1000; // size of 64x64 ia8 texture
+                u32 offset;
+                if ((gSaveContext.save.totalDays % 8) != 4) {
+                    offset = size * (gSaveContext.save.totalDays % 8);
+                    DMA_REQUEST_SYNC(play->skyboxCtx.staticSegments[0], (uintptr_t)_moon_staticSegmentRomStart + offset, size,
+                                     __FILE__, __LINE__);
+                    offset = (size * 8) + (size * (gSaveContext.save.totalDays % 8));
+                    DMA_REQUEST_SYNC(play->skyboxCtx.staticSegments[1], (uintptr_t)_moon_staticSegmentRomStart + offset, size,
+                                     __FILE__, __LINE__);
+                }
             }
             break;
 

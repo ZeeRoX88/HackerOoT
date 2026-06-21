@@ -6,10 +6,6 @@
 extern Gfx gBottleContentsDL[];
 extern Gfx gBottleGlassDL[];
 
-/* extern u64 gMoonPhase00Tex[]; */
-extern u64 gMoonPhase01Tex[];
-extern u64 gMoonPhase02Tex[];
-extern u64 gMoonPhase03Tex[];
 extern u64 gEffKusaTex[];
 
 extern Vtx gOEffDustDL_gOEffDustDL_mesh_layer_Transparent_vtx_cull[8];
