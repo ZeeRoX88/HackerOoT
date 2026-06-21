@@ -2753,6 +2753,7 @@ void func_80903F38(BossGanon2* this, PlayState* play) {
     }
 
     if (D_80910638 >= 4) {
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
         gSPSegment(POLY_XLU_DISP++, 0x08,
                    Gfx_TwoTexScroll(play->state.gfxCtx, G_TX_RENDERTILE, 0, 0, 32, 32, 1, play->gameplayFrames * 18, 0,
                                     32, 32));
@@ -2771,6 +2772,8 @@ void func_80904108(BossGanon2* this, PlayState* play) {
 
     if (this->unk_324 > 0.0f) {
         OPEN_DISPS(gameState->gfxCtx, "../z_boss_ganon2.c", 5131);
+
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
 
         Matrix_Push();
         gDPPipeSync(POLY_XLU_DISP++);
@@ -2801,6 +2804,7 @@ void func_80904340(BossGanon2* this, PlayState* play) {
     f32 rand;
 
     OPEN_DISPS(gameState->gfxCtx, "../z_boss_ganon2.c", 5196);
+    gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
     Matrix_Push();
 
     if ((this->unk_330 != 0) || (this->unk_328 != 0)) {
@@ -2846,6 +2850,8 @@ void func_8090464C(BossGanon2* this, PlayState* play) {
 
     if (this->unk_1B4 > 0.0f) {
         OPEN_DISPS(gameState->gfxCtx, "../z_boss_ganon2.c", 5264);
+
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD);
 
         Matrix_Push();
         gDPPipeSync(POLY_XLU_DISP++);
