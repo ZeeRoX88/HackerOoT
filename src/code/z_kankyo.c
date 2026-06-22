@@ -2245,7 +2245,8 @@ void Environment_DrawSunAndMoon(PlayState* play) {
             alpha = CLAMP((alpha >> 1) - 27 , 0, 100);
             gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 240, 255, 180, alpha);
 
-            gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_NONE);
+            gDPSetColorDither(POLY_OPA_DISP++, G_CD_DISABLE);
+            gDPSetAlphaCompare(POLY_OPA_DISP++, G_AC_NONE); // maybe only do this on emulator when real hardware check has been added
 
             gSPTexture(POLY_OPA_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
             gDPLoadTextureBlock(POLY_OPA_DISP++, play->skyboxCtx.staticSegments[1], G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_MIRROR | G_TX_WRAP,
