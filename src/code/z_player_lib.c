@@ -1181,7 +1181,7 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
     gDPSetEnvColor(POLY_OPA_DISP++, color->r, color->g, color->b, 0);
 
     // segment call for wet primcolor in other materials, needs to be added to player model
-    gSPSegment(POLY_OPA_DISP++, 0x0A, Player_PrimColorDlist(play->state.gfxCtx));
+    gSPSegment(POLY_OPA_DISP++, 0x0A, Player_PrimColorDlist(play->state.gfxCtx)); // check if the dlists using this are all opa
 
     sDListsLodOffset = lod * 2; // could this be an issue?
 

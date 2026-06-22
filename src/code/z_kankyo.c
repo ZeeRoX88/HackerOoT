@@ -1735,11 +1735,9 @@ void Environment_DrawSkybox(PlayState* play) {
     Skybox_DrawNew(&play->skyboxCtx, play->state.gfxCtx, &play->lightCtx, play->skyboxId, play->envCtx.skyboxBlend,
                     play->view.eye.x, play->view.eye.y, play->view.eye.z);
 
-    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
-
-    gSPSegment(POLY_XLU_DISP++, 0x7, play->skyboxCtx.skyboxStaticSegment); // setting the correct segment for xlu
-
     Environment_DrawCloudStorm(play);
+
+    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
     static u8 fogIntensity;
     if (play->envCtx.changeSkyboxNextConfig != 0 || (play->envCtx.skyboxConfig != 0 && play->envCtx.changeSkyboxNextConfig != 0)) { // storm condition
@@ -1876,6 +1874,8 @@ void Environment_DrawCloudStorm(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
+    gSPSegment(POLY_XLU_DISP++, 0x7, play->skyboxCtx.skyboxStaticSegment); // setting the correct segment for xlu
+
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], stormAlpha);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
@@ -1893,6 +1893,8 @@ void Environment_DrawCloudStorm(PlayState* play) {
 // cloud ring
 void Environment_DrawCloudHorizon(PlayState* play) {
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
+
+    gSPSegment(POLY_XLU_DISP++, 0x7, play->skyboxCtx.skyboxStaticSegment); // setting the correct segment for xlu
 
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], 150);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
@@ -1917,6 +1919,8 @@ void Environment_DrawClouds(PlayState* play) {
     windRot = Math_Atan2F(play->envCtx.windDirection.y, play->envCtx.windDirection.x) - DEG_TO_RAD(90);
 
     OPEN_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 214);
+
+    gSPSegment(POLY_XLU_DISP++, 0x7, play->skyboxCtx.skyboxStaticSegment); // setting the correct segment for xlu
 
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
