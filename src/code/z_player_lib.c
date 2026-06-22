@@ -1159,8 +1159,8 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
             u8 bodyPartIndex[] = { PLAYER_BODYPART_WAIST, PLAYER_BODYPART_HEAD, PLAYER_BODYPART_TORSO, PLAYER_BODYPART_HAT,
                                    PLAYER_BODYPART_L_SHOULDER, PLAYER_BODYPART_L_FOREARM, PLAYER_BODYPART_L_HAND,
                                    PLAYER_BODYPART_R_SHOULDER, PLAYER_BODYPART_R_FOREARM, PLAYER_BODYPART_R_HAND };
-            static Color_RGBA8 sEffectPrimColor = { 150, 150, 150, 230 };
-            static Color_RGBA8 sEffectEnvColor = { 120, 120, 120, 0 };
+            static Color_RGBA8 sEffectPrimColor = { 180, 180, 180, 255 };
+            static Color_RGBA8 sEffectEnvColor = { 150, 150, 150, 0 };
             Vec3f effectPos;
             Vec3f effectVelocity = { 0.0f, -0.25f, 0.0f };
             Vec3f effectAccel = { 0.0f, -0.4f, 0.0f };
