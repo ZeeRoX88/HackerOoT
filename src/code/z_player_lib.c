@@ -1183,7 +1183,7 @@ void Player_DrawImpl(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dL
     // segment call for wet primcolor in other materials, needs to be added to player model
     gSPSegment(POLY_OPA_DISP++, 0x0A, Player_PrimColorDlist(play->state.gfxCtx));
 
-    sDListsLodOffset = lod * 2;
+    sDListsLodOffset = lod * 2; // could this be an issue?
 
     SkelAnime_DrawFlexLod(play, skeleton, jointTable, dListCount, overrideLimbDraw, postLimbDraw, data, lod);
 

@@ -104,7 +104,7 @@ void Skybox_Draw(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightContext
     CLOSE_DISPS(gfxCtx, "../z_vr_box_draw.c", 125);
 }
 
-Vtx skybox_cylinder_vertices[37] = {
+static Vtx skybox_cylinder_vertices[37] = {
 	{{ {0, 0, -100}, 0, {1008, 240}, {180, 214, 255, 255} }},
 	{{ {70, 35, -70}, 0, {880, -16}, {57, 73, 192, 255} }},
 	{{ {0, 35, -100}, 0, {1008, -16}, {57, 73, 192, 255} }},

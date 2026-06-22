@@ -625,9 +625,11 @@ void Play_Init(GameState* thisx) {
     //! TODO: investigate issue with this variable set to a random value
     this->gameplayFrames = 0;
 
+    // new skybox
     Environment_InitClouds(this);
 
-    if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
+    // add some conditions here when dynamic weather shouldn't happen, cutscenes for example or specific scenes
+    if ((this->skyboxId == SKYBOX_NORMAL_SKY) && !(gSaveContext.save.cutsceneIndex >= CS_INDEX_0)) {
         Environment_DynamicWeather(this);
     }
 }
@@ -1553,7 +1555,7 @@ void Play_Draw(PlayState* this) {
                 if ((this->skyboxId == SKYBOX_NORMAL_SKY) || (this->skyboxId == SKYBOX_CUTSCENE_MAP) || this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
                     if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
                         Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
-                        if ((this->gameplayFrames % 200) == 0) {
+                        if ((this->skyboxId == SKYBOX_NORMAL_SKY) && ((this->gameplayFrames % 200) == 0) && !(gSaveContext.save.cutsceneIndex >= CS_INDEX_0)) {
                             Environment_DynamicWeather(this);
                         }
                     }
@@ -1562,7 +1564,9 @@ void Play_Draw(PlayState* this) {
             }
         }
 
-        Environment_SetupSkyboxStars(this);
+        if ((this->skyboxCtx.drawType == SKYBOX_DRAW_128)) {
+            Environment_SetupSkyboxStars(this);
+        }
 
         if (!DEBUG_FEATURES || (R_HREG_MODE != HREG_MODE_PLAY) ||
             (R_PLAY_DRAW_ENV_FLAGS & PLAY_ENV_DRAW_SUN_AND_MOON)) {
@@ -1754,7 +1758,7 @@ Play_Draw_skip:
 
     Camera_Finish(GET_ACTIVE_CAM(this));
 
-    if (envDrawCheck) {
+    if (envDrawCheck && (this->skyboxCtx.drawType == SKYBOX_DRAW_128)) {
         Environment_DrawSkyboxStars(this);
     }
 
