@@ -1809,7 +1809,8 @@ void Environment_ResetCloud(PlayState* play, u8 i) {
         play->envCtx.clouds[i].rot.y *= -1;
     }
 
-    play->envCtx.clouds[i].texId = (u8)Rand_S16Offset(0, 3); // 0-2
+    // check if this is still properly rounded???
+    play->envCtx.clouds[i].texId = (u8)Rand_ZeroFloat(2.99f); // 0-2
 }
 
 void Environment_InitClouds(PlayState* play) {
@@ -1834,6 +1835,10 @@ void Environment_UpdateClouds(PlayState* play) {
     u8 i;
 
     for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
+        if ((play->gameplayFrames % 5) == 0) {
+            play->envCtx.clouds[i].texId = (u8)Rand_ZeroFloat(2.99f);
+        }
+
         if (i < sCloudDensity) {
             if (RAD_TO_DEG(play->envCtx.clouds[i].rot.y) >= 0) {
                 play->envCtx.clouds[i].rot.y += 0.0001f + (DEG_TO_RAD(play->envCtx.clouds[i].targetPitch) * 0.0005)/*  + (play->envCtx.windSpeed * 0.000005) */;
@@ -1876,7 +1881,6 @@ void Environment_DrawCloudStorm(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
-    gDPPipeSync(POLY_XLU_DISP++);
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], stormAlpha);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
@@ -1895,7 +1899,6 @@ void Environment_DrawCloudStorm(PlayState* play) {
 void Environment_DrawCloudHorizon(PlayState* play) {
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
-    gDPPipeSync(POLY_XLU_DISP++);
     gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], 150);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
@@ -1914,45 +1917,46 @@ void Environment_DrawCloudHorizon(PlayState* play) {
 void Environment_DrawClouds(PlayState* play) {
     static void* cloudTex[] = {skybox_cloud_01_tex, skybox_cloud_02_tex, skybox_cloud_03_tex};
     u8 i;
-    f32 windRot;
+    // f32 windRot;
 
-    windRot = Math_Atan2F(play->envCtx.windDirection.y, play->envCtx.windDirection.x) - DEG_TO_RAD(90);
+    // windRot = Math_Atan2F(play->envCtx.windDirection.y, play->envCtx.windDirection.x) - DEG_TO_RAD(90);
 
-    OPEN_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 214);
+    OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
-    gDPPipeSync(POLY_XLU_DISP++);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
     for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
-        f32 scale;
+        if (play->envCtx.clouds[i].alpha > 0) {
+            f32 scale;
 
-        gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], play->envCtx.clouds[i].alpha);
+            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, play->envCtx.dirLight1.params.dir.color[0], play->envCtx.dirLight1.params.dir.color[1], play->envCtx.dirLight1.params.dir.color[2], play->envCtx.clouds[i].alpha);
 
-        Matrix_Translate(play->view.eye.x, play->view.eye.y, play->view.eye.z, MTXMODE_NEW);
+            Matrix_Translate(play->view.eye.x, play->view.eye.y, play->view.eye.z, MTXMODE_NEW);
 
-        // yaw
-        Matrix_RotateY(play->envCtx.clouds[i].rot.y + windRot, MTXMODE_APPLY);
+            // yaw
+            Matrix_RotateY(play->envCtx.clouds[i].rot.y - DEG_TO_RAD(90), MTXMODE_APPLY);
 
-        // pitch
-        Matrix_RotateZ(play->envCtx.clouds[i].rot.z, MTXMODE_APPLY);
-        Matrix_Translate(6000.0f, 0, 0, MTXMODE_APPLY);
+            // pitch
+            Matrix_RotateZ(play->envCtx.clouds[i].rot.z, MTXMODE_APPLY);
+            Matrix_Translate(6000.0f, 0, 0, MTXMODE_APPLY);
 
-        scale = play->envCtx.clouds[i].scale + ((f32)RAD_TO_DEG(play->envCtx.clouds[i].rot.z) * 0.03f);
-        Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+            scale = play->envCtx.clouds[i].scale + (RAD_TO_DEG(play->envCtx.clouds[i].rot.z) * 0.03f);
+            Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
 
-        gSPMatrix(POLY_XLU_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, "../z_cheap_proc.c", 216),
-                G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-        
-        gSPTexture(POLY_XLU_DISP++, 65535, 65535, 0, 0, 1);
-	    gDPSetTextureImage(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, cloudTex[play->envCtx.clouds[i].texId]);
-	    gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0);
-	    gDPLoadBlock(POLY_XLU_DISP++, 7, 0, 0, 1023, 256);
-	    gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 6, 0);
-	    gDPSetTileSize(POLY_XLU_DISP++, 0, 0, 0, 252, 124);
-        gSPDisplayList(POLY_XLU_DISP++, skybox_cloud);
+            gSPMatrix(POLY_XLU_DISP++, MATRIX_FINALIZE(play->state.gfxCtx, __FILE__, __LINE__),
+                                       G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+            
+            gSPTexture(POLY_XLU_DISP++, 65535, 65535, 0, 0, 1);
+	        gDPSetTextureImage(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, cloudTex[play->envCtx.clouds[i].texId]);
+	        gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0);
+	        gDPLoadBlock(POLY_XLU_DISP++, 7, 0, 0, 1023, 256);
+	        gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 6, 0);
+	        gDPSetTileSize(POLY_XLU_DISP++, 0, 0, 0, 252, 124);
+            gSPDisplayList(POLY_XLU_DISP++, skybox_cloud);
+        }
     }
 
-    CLOSE_DISPS(play->state.gfxCtx, "../z_cheap_proc.c", 219);
+    CLOSE_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 }
 
 typedef struct WeatherEvent {
@@ -1973,7 +1977,7 @@ void Environment_CalculateWeather(PlayState* play) {
 
     if (Rand_ZeroOne() <= 0.75f && weatherModeTest == WEATHER_EVENT_SUNNY) { // hit weather event if it is sunny, it will be at least cloudy
         if (Rand_ZeroOne() <= 0.75f) { // rain/thunder, shorter schedule
-            u8 randState = (u8)Rand_S16Offset(0, 3); // 0-2
+            u8 randState = (u8)Rand_ZeroFloat(2.99f); // 0-2
 
             for (u8 i = 0; i < ARRAY_COUNT(weatherSchedule) - 1; i++) {
                 weatherSchedule[i].startTime = prevEndTime;

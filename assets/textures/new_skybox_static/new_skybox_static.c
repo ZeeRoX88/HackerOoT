@@ -22,7 +22,7 @@ u64 skybox_cloud_horizon_tex[] = {
 #include "assets/textures/new_skybox_static/cloud_horizon.ia8.inc.c"
 };
 
-Vtx skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_vtx_cull[8] = {
+/* Vtx skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_vtx_cull[8] = {
 	{{ {-5000, -250, -5000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {-5000, -250, 5000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {-5000, 250, 5000}, 0, {0, 0}, {0, 0, 0, 0} }},
@@ -31,7 +31,7 @@ Vtx skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_vtx_cull[8]
 	{{ {5000, -250, 5000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {5000, 250, 5000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {5000, 250, -5000}, 0, {0, 0}, {0, 0, 0, 0} }},
-};
+}; */
 
 Vtx skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_vtx_0[25] = {
 	{{ {0, -250, -5000}, 0, {2032, 496}, {255, 255, 255, 255} }},
@@ -91,16 +91,16 @@ Gfx mat_skybox_cloud_horizon_f3dlite_material_001_layerTransparent[] = {
 };
 
 Gfx skybox_cloud_horizon[] = {
-	gsSPClearGeometryMode(G_LIGHTING),
+	/* gsSPClearGeometryMode(G_LIGHTING),
 	gsSPVertex(skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_vtx_cull + 0, 8, 0),
 	gsSPSetGeometryMode(G_LIGHTING),
-	gsSPCullDisplayList(0, 7),
+	gsSPCullDisplayList(0, 7), */
 	gsSPDisplayList(mat_skybox_cloud_horizon_f3dlite_material_001_layerTransparent),
 	gsSPDisplayList(skybox_cloud_horizon_skybox_cloud_horizon_mesh_layer_Transparent_tri_0),
 	gsSPEndDisplayList(),
 };
 
-Vtx skybox_cloud_skybox_cloud_mesh_layer_Transparent_vtx_cull[8] = {
+/* Vtx skybox_cloud_skybox_cloud_mesh_layer_Transparent_vtx_cull[8] = {
 	{{ {0, -500, -1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {0, -500, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {0, 500, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
@@ -109,7 +109,7 @@ Vtx skybox_cloud_skybox_cloud_mesh_layer_Transparent_vtx_cull[8] = {
 	{{ {0, -500, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {0, 500, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {0, 500, -1000}, 0, {0, 0}, {0, 0, 0, 0} }},
-};
+}; */
 
 Vtx skybox_cloud_skybox_cloud_mesh_layer_Transparent_vtx_0[4] = {
 	{{ {0, 500, -1000}, 0, {2032, -16}, {255, 255, 255, 255} }},
@@ -135,10 +135,10 @@ Gfx mat_skybox_cloud_f3dlite_material_006_layerTransparent[] = {
 };
 
 Gfx skybox_cloud[] = {
-	gsSPClearGeometryMode(G_LIGHTING),
+	/* gsSPClearGeometryMode(G_LIGHTING),
 	gsSPVertex(skybox_cloud_skybox_cloud_mesh_layer_Transparent_vtx_cull + 0, 8, 0),
 	gsSPSetGeometryMode(G_LIGHTING),
-	gsSPCullDisplayList(0, 7),
+	gsSPCullDisplayList(0, 7), */
 	gsSPDisplayList(mat_skybox_cloud_f3dlite_material_006_layerTransparent),
 	gsSPDisplayList(skybox_cloud_skybox_cloud_mesh_layer_Transparent_tri_0),
 	gsSPEndDisplayList(),
@@ -202,7 +202,7 @@ Gfx mat_skybox_cylinder_b_f3dlite_material_008_layerOpaque[] = {
 	gsSPEndDisplayList(),
 }; */
 
-Vtx skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_vtx_cull[8] = {
+/* Vtx skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_vtx_cull[8] = {
 	{{ {-1000, 0, -1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {-1000, 0, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {-1000, 0, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
@@ -211,7 +211,7 @@ Vtx skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_vtx_cull[8] = {
 	{{ {1000, 0, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {1000, 0, 1000}, 0, {0, 0}, {0, 0, 0, 0} }},
 	{{ {1000, 0, -1000}, 0, {0, 0}, {0, 0, 0, 0} }},
-};
+}; */
 
 Vtx skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_vtx_0[4] = {
 	{{ {-1000, 0, -1000}, 0, {2032, -16}, {255, 255, 255, 255} }},
@@ -243,10 +243,10 @@ Gfx mat_skybox_storm_cloud_f3dlite_material_009_layerTransparent[] = {
 };
 
 Gfx skybox_storm_cloud[] = {
-	gsSPClearGeometryMode(G_LIGHTING),
+	/* gsSPClearGeometryMode(G_LIGHTING),
 	gsSPVertex(skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_vtx_cull + 0, 8, 0),
 	gsSPSetGeometryMode(G_LIGHTING),
-	gsSPCullDisplayList(0, 7),
+	gsSPCullDisplayList(0, 7), */
 	gsSPDisplayList(mat_skybox_storm_cloud_f3dlite_material_009_layerTransparent),
 	gsSPDisplayList(skybox_storm_cloud_skybox_storm_cloud_mesh_layer_Transparent_tri_0),
 	gsSPEndDisplayList(),
