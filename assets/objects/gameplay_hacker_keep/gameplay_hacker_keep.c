@@ -5,6 +5,10 @@
 #include "assets/objects/gameplay_hacker_keep/bottle.c"
 #endif
 
+u64 gStarTex[] = {
+#include "assets/objects/gameplay_hacker_keep/gStarTex.ia8.inc.c"
+};
+
 u64 gEffKusaTex[] = {
 #include "assets/objects/gameplay_hacker_keep/eff_kusa.ia8.inc.c"
 };
@@ -43,6 +47,7 @@ Gfx mat_gOEffDustDL_f3dlite_material_layerTransparent[] = {
 	gsDPSetTextureLUT(G_TT_NONE),
 	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, gEffKusaTex),
 	gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0),
+	gsDPLoadSync(),
 	gsDPLoadBlock(7, 0, 0, 511, 512),
 	gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_8b, 4, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0),
 	gsDPSetTileSize(0, 0, 0, 124, 124),
@@ -70,10 +75,13 @@ Gfx gCircleShadowNewDL[] = {
     gsSPTexture(65535, 65535, 0, 0, 1),
     gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_16b_LOAD_BLOCK, 1, gCircleShadowTex),
     gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
-    gsDPLoadBlock(7, 0, 0, 1023, 256),
+    gsDPLoadSync(),
+	gsDPLoadBlock(7, 0, 0, 1023, 256),
     gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_16b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0),
     gsDPSetTileSize(0, 0, 0, 124, 124),
     gsSPVertex(gCircleShadowDL_gCircleShadowDL_mesh_layer_Transparent_vtx_0 + 0, 4, 0),
     gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
     gsSPEndDisplayList(),
 };
+
+

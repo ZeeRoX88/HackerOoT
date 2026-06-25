@@ -320,6 +320,8 @@ enum {
 #define ZBUFVAL_EXPONENT(v) (((v) >> 15) & 7)
 #define ZBUFVAL_MANTISSA(v) (((v) >> 4) & 0x7FF)
 
+#define USE_STAR_TEXTURE true
+
 /**
  * Convert an 18-bits Z buffer value to a fixed point 15.3 value
  *
@@ -439,7 +441,7 @@ void Environment_Init(PlayState* play2, EnvironmentContext* envCtx, s32 unused) 
     PlayState* play = play2;
 
     sEnvSkyboxNumStars = 0;
-    gSkyboxNumStars = 200; // maybe you could slowly increase and decrease
+    gSkyboxNumStars = 300; // maybe you could slowly increase and decrease
 
     // initialize skybox vertex colors
     for (i = 0; i < 3; i++) {
@@ -1589,11 +1591,17 @@ void Environment_DrawSkyboxStar(Gfx** gfxP, f32 x, f32 y, s32 width, s32 height)
     Gfx* gfx = *gfxP;
     u32 xl = x * 4.0f;
     u32 yl = y * 4.0f;
+#if USE_STAR_TEXTURE // make this a real hardware check instead
+    u32 xh = xl + (width  << 2);
+    u32 yh = yl + (height << 2);
+    u32 dsdx = (64 << 10) / width;
+    u32 dtdy = (64 << 10) / height;
+    gSPTextureRectangle(gfx++, xl, yl, xh, yh, G_TX_RENDERTILE, 0, 0, dsdx, dtdy);
+#else
     u32 xd = width;
     u32 yd = height;
-
     gSPTextureRectangle(gfx++, xl, yl, xl + xd, yl + yd, 0, 0, 0, 0, 0);
-
+#endif
     *gfxP = gfx;
 }
 
@@ -1628,10 +1636,9 @@ void Environment_DrawSkyboxStarsImpl(PlayState* play, Gfx** gfxP) {
     s32 i;
     u32 randInt;
     u32 imgWidth;
-    f32* imgXPtr;
-    f32* imgYPtr;
-    Vec3f* posPtr;
-    s32 pad[2];
+    // f32* imgXPtr;
+    // f32* imgYPtr;
+    // Vec3f* posPtr;
     f32(*viewProjectionMtxF)[4];
 
     gfx = *gfxP;
@@ -1644,12 +1651,16 @@ void Environment_DrawSkyboxStarsImpl(PlayState* play, Gfx** gfxP) {
 
     gDPPipeSync(gfx++);
     gDPSetEnvColor(gfx++, 255, 255, 255, 255.0f * sStarAlpha);
-    gDPSetCombineLERP(gfx++, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0,
-                      PRIMITIVE, 0, ENVIRONMENT, 0);
-    gDPSetOtherMode(gfx++,
-                    G_AD_DISABLE | G_CD_DISABLE | G_CK_NONE | G_TC_FILT | G_TF_POINT | G_TT_NONE | G_TL_TILE |
-                        G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_NPRIMITIVE,
-                    G_AC_NONE | G_ZS_PRIM | G_RM_AA_XLU_LINE | G_RM_AA_XLU_LINE2);
+#if USE_STAR_TEXTURE
+    // change combiner settings to use environment color as well
+    gDPSetCombineLERP(gfx++, TEXEL0, 0, PRIMITIVE, 0, TEXEL0, 0, ENVIRONMENT, 0,  TEXEL0, 0, PRIMITIVE, 0, TEXEL0, 0, ENVIRONMENT, 0);
+    gDPSetOtherMode(gfx++, G_AD_DISABLE | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE | G_TL_TILE | G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_NPRIMITIVE, G_AC_NONE | G_ZS_PRIM | G_RM_AA_XLU_SURF | G_RM_AA_XLU_SURF2);
+    gDPLoadTextureBlock(gfx++, gStarTex, G_IM_FMT_IA, G_IM_SIZ_8b, 64, 64, 0, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
+    gSPTexture(gfx++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
+#else
+    gDPSetCombineLERP(gfx++, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0, PRIMITIVE, 0, ENVIRONMENT, 0);
+    gDPSetOtherMode(gfx++, G_AD_DISABLE | G_CD_DISABLE | G_CK_NONE | G_TC_FILT | G_TF_POINT | G_TT_NONE | G_TL_TILE | G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_NPRIMITIVE, G_AC_NONE | G_ZS_PRIM | G_RM_AA_XLU_LINE | G_RM_AA_XLU_LINE2);
+#endif
 
     randInt = ((u32)gSaveContext.save.info.playerData.playerName[0] << 0x18) ^
               ((u32)gSaveContext.save.info.playerData.playerName[1] << 0x14) ^
@@ -1669,7 +1680,6 @@ void Environment_DrawSkyboxStarsImpl(PlayState* play, Gfx** gfxP) {
             imgWidth = 8;
         } else {
             f32 temp_f22;
-            // f32 temp_f4;
             f32 temp_f2;
 
             temp_f20 = Rand_ZeroOne_Variable(&randInt);
@@ -1721,7 +1731,11 @@ void Environment_DrawSkyboxStarsImpl(PlayState* play, Gfx** gfxP) {
                 imgY = (imgY * -(SCREEN_HEIGHT / 2)) + (SCREEN_HEIGHT / 2);
 
                 gfxTemp = gfx;
+#if USE_STAR_TEXTURE
+                Environment_DrawSkyboxStar(&gfxTemp, imgX, imgY, imgWidth, imgWidth);
+#else
                 Environment_DrawSkyboxStar(&gfxTemp, imgX, imgY, imgWidth, 4);
+#endif
                 gfx = gfxTemp;
             }
         }
@@ -1736,8 +1750,6 @@ void Environment_DrawSkybox(PlayState* play) {
                     play->view.eye.x, play->view.eye.y, play->view.eye.z);
 
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
-
-    gSPSegment(POLY_XLU_DISP++, 0x7, play->skyboxCtx.skyboxStaticSegment); // setting the correct segment for xlu
 
     Environment_DrawCloudStorm(play);
 
@@ -1761,6 +1773,8 @@ void Environment_DrawSkybox(PlayState* play) {
     
     Environment_DrawCloudHorizon(play);
     Environment_DrawClouds(play);
+
+    gDPPipeSync(POLY_XLU_DISP++);
 
     POLY_XLU_DISP = Play_SetFog(play, POLY_XLU_DISP);
 
@@ -1809,7 +1823,6 @@ void Environment_ResetCloud(PlayState* play, u8 i) {
         play->envCtx.clouds[i].rot.y *= -1;
     }
 
-    // check if this is still properly rounded???
     play->envCtx.clouds[i].texId = (u8)Rand_ZeroFloat(2.99f); // 0-2
 }
 
@@ -1835,10 +1848,6 @@ void Environment_UpdateClouds(PlayState* play) {
     u8 i;
 
     for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
-        if ((play->gameplayFrames % 5) == 0) {
-            play->envCtx.clouds[i].texId = (u8)Rand_ZeroFloat(2.99f);
-        }
-
         if (i < sCloudDensity) {
             if (RAD_TO_DEG(play->envCtx.clouds[i].rot.y) >= 0) {
                 play->envCtx.clouds[i].rot.y += 0.0001f + (DEG_TO_RAD(play->envCtx.clouds[i].targetPitch) * 0.0005)/*  + (play->envCtx.windSpeed * 0.000005) */;
@@ -1917,12 +1926,13 @@ void Environment_DrawCloudHorizon(PlayState* play) {
 void Environment_DrawClouds(PlayState* play) {
     static void* cloudTex[] = {skybox_cloud_01_tex, skybox_cloud_02_tex, skybox_cloud_03_tex};
     u8 i;
-    // f32 windRot;
+    f32 windRot;
 
-    // windRot = Math_Atan2F(play->envCtx.windDirection.y, play->envCtx.windDirection.x) - DEG_TO_RAD(90);
+    windRot = Math_Atan2F(play->envCtx.windDirection.y, play->envCtx.windDirection.x) - DEG_TO_RAD(90);
 
     OPEN_DISPS(play->state.gfxCtx, __FILE__, __LINE__);
 
+    gDPPipeSync(POLY_XLU_DISP++);
     gDPSetEnvColor(POLY_XLU_DISP++, play->envCtx.dirLight2.params.dir.color[0], play->envCtx.dirLight2.params.dir.color[1], play->envCtx.dirLight2.params.dir.color[2], 0);
 
     for (i = 0; i < ARRAY_COUNT(play->envCtx.clouds); i++) {
@@ -1934,7 +1944,7 @@ void Environment_DrawClouds(PlayState* play) {
             Matrix_Translate(play->view.eye.x, play->view.eye.y, play->view.eye.z, MTXMODE_NEW);
 
             // yaw
-            Matrix_RotateY(play->envCtx.clouds[i].rot.y - DEG_TO_RAD(90), MTXMODE_APPLY);
+            Matrix_RotateY(play->envCtx.clouds[i].rot.y + windRot, MTXMODE_APPLY);
 
             // pitch
             Matrix_RotateZ(play->envCtx.clouds[i].rot.z, MTXMODE_APPLY);
@@ -1948,8 +1958,9 @@ void Environment_DrawClouds(PlayState* play) {
             
             gSPTexture(POLY_XLU_DISP++, 65535, 65535, 0, 0, 1);
 	        gDPSetTextureImage(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, cloudTex[play->envCtx.clouds[i].texId]);
-	        gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0);
-	        gDPLoadBlock(POLY_XLU_DISP++, 7, 0, 0, 1023, 256);
+            gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0);
+	        gDPLoadSync(POLY_XLU_DISP++);
+            gDPLoadBlock(POLY_XLU_DISP++, 7, 0, 0, 1023, 256);
 	        gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_IA, G_IM_SIZ_8b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 6, 0);
 	        gDPSetTileSize(POLY_XLU_DISP++, 0, 0, 0, 252, 124);
             gSPDisplayList(POLY_XLU_DISP++, skybox_cloud);
@@ -2008,13 +2019,6 @@ void Environment_CalculateWeather(PlayState* play) {
     weatherSchedule[3].startTime = prevEndTime;
     weatherSchedule[3].endTime = prevEndTime + CLOCK_TIME(6,0); // for marker
 }
-
-/* 
-Notes: 
-- Nighttime is running faster, maybe change this
-- Investigate fog glitch and fix it, does it even happen?
-- limit this system to scenes which don't use prerenders
- */
 
 void Environment_DynamicWeather(PlayState* play) {
     u8 i = 0;

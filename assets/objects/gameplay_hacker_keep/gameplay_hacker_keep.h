@@ -6,6 +6,7 @@
 extern Gfx gBottleContentsDL[];
 extern Gfx gBottleGlassDL[];
 
+extern u64 gStarTex[];
 extern u64 gEffKusaTex[];
 
 extern Vtx gOEffDustDL_gOEffDustDL_mesh_layer_Transparent_vtx_cull[8];
