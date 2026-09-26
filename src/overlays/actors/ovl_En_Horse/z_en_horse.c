@@ -957,6 +957,7 @@ void EnHorse_StartMountedIdle(EnHorse* this);
 void EnHorse_StartGalloping(EnHorse* this);
 
 void EnHorse_Frozen(EnHorse* this, PlayState* play) {
+    SkelAnime_Update(&this->skin.skelAnime);
     this->actor.speed = 0.0f;
     this->noInputTimer--;
     if (this->noInputTimer < 0) {
@@ -1215,7 +1216,7 @@ void EnHorse_StartWalkingFromIdle(EnHorse* this) {
 
     if (!(this->stateFlags & ENHORSE_FLAG_8) && !(this->stateFlags & ENHORSE_FLAG_9)) {
         this->stateFlags |= ENHORSE_FLAG_9;
-        this->waitTimer = 8;
+        this->waitTimer = 0;
         return;
     }
     this->waitTimer = 0;
@@ -1384,7 +1385,7 @@ void EnHorse_MountedGallop(EnHorse* this, PlayState* play) {
     EnHorse_StickDirection(&this->curStick, &stickMag, &stickAngle);
 
     if (this->noInputTimer <= 0.0f) {
-        EnHorse_UpdateSpeed(this, play, 0.3f, -0.5f, 10.0f, 0.06f, 8.0f, 0x190);
+        EnHorse_UpdateSpeed(this, play, 0.3f, -0.5f, 10.0f, 0.06f, 8.0f, 500); // might need a speed condition
     } else if (this->noInputTimer > 0.0f) {
         this->noInputTimer--;
         this->actor.speed = 8.0f;
@@ -3859,3 +3860,10 @@ void EnHorse_Draw(Actor* thisx, PlayState* play) {
         }
     }
 }
+
+/* 
+Notes:
+- continue to play idle animation when player mounts epona XXX FIXED XXX
+- when epona is galloping stick direction will keep the speed, so speed doesn't decrease
+- decrease mounting duration, cut the player animation short
+ */
