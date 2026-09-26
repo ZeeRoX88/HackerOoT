@@ -1075,7 +1075,19 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
     }
 
     temp_f12 = *stickAnglePtr * (1 / 32236.f);
-    traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed));
+    // this needs to be changed
+    // right now, slow speed is high traction
+    // needs to be reversed
+    if (this->actor.speed > 0.0f) {
+        traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed));
+    } else {
+        traction = 2.2f;
+    }
+    /* traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed)); */ // this does dampen the turn with higher speeds
+    // higher traction means faster/immediate turn
+    /* if (traction < 1.6f) {
+        traction = 1.6f;
+    } */
     turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
     turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
     this->actor.world.rot.y += turn;
@@ -3430,11 +3442,14 @@ void EnHorse_UpdatePlayerDir(EnHorse* this, PlayState* play) {
     }
 }
 
+// leaning
 void EnHorse_TiltBody(EnHorse* this, PlayState* play) {
     f32 speed;
     f32 rollDiff;
     s32 targetRoll;
     s16 turnVel;
+
+    // this whole thing is very stuttery and not fluent enough
 
     speed = this->actor.speed / this->boostSpeed;
     turnVel = this->actor.shape.rot.y - this->lastYaw;
@@ -3539,7 +3554,8 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
             }
         }
         if (this->action != ENHORSE_ACT_INGO_RACE) {
-            EnHorse_TiltBody(this, play);
+            EnHorse_TiltBody(this, play); // change this to tilt more faster and smoothly
+            // maybe change this inside the galloping code, so it does actually use the actual turn values?
         }
         Collider_UpdateCylinder(thisx, &this->colliderCylinder1);
         Collider_UpdateCylinder(thisx, &this->colliderCylinder2);
@@ -3863,7 +3879,9 @@ void EnHorse_Draw(Actor* thisx, PlayState* play) {
 
 /* 
 Notes:
-- continue to play idle animation when player mounts epona XXX FIXED XXX
+- continue to play idle animation when player mounts epona                                      XXX FIXED XXX
 - when epona is galloping stick direction will keep the speed, so speed doesn't decrease
 - decrease mounting duration, cut the player animation short
+- epona and link lean into direction, but it is too slow when quick turns happen and 
+  it suddenly sets back to normal when facing forward
  */
