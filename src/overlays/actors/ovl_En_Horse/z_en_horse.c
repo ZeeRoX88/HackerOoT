@@ -1077,19 +1077,19 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
 
     temp_f12 = *stickAnglePtr * (1 / 32236.f);
     // this needs to be changed
-    // right now, slow speed is high traction
-    // needs to be reversed
     if (this->actor.speed > 0.0f) {
         traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed));
+        if (traction > 2.0f) {
+           traction = 2.0f; 
+        }
+        // traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed)); // this is reversed now, but not sure if it is good
     } else {
         traction = 2.2f;
     }
     /* traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed)); */ // this does dampen the turn with higher speeds
     // higher traction means faster/immediate turn
-    /* if (traction < 1.6f) {
-        traction = 1.6f;
-    } */
-    turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
+    // less stick angle should result in a slower turn
+    turn = *stickAnglePtr * temp_f12 * temp_f12 * traction; // wtf is this
     turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
     this->actor.world.rot.y += turn;
     this->actor.shape.rot.y = this->actor.world.rot.y;
@@ -3068,6 +3068,9 @@ void EnHorse_StickDirection(Vec2f* curStick, f32* stickMag, s16* angle) {
     dist = sqrtf(SQ(x) + SQ(y));
 
     *stickMag = dist;
+    /* f32 temp;
+    temp = 1.0f - Math_CosS(dist * 450.0f);
+    *stickMag = temp; */
     if (dist > 60.0f) {
         *stickMag = 60.0f;
     } else {
@@ -3455,29 +3458,7 @@ void EnHorse_TiltBody(EnHorse* this, PlayState* play) {
     targetRoll = -((s16)((1820.0f * speed) * (turnVel / 480.00003f))); // maybe change this
     rollDiff = targetRoll - this->actor.world.rot.z;
 
-    // Debug_Print(0, "rdiff %.3f", fabsf(rollDiff));
-    // Debug_Print(1, "tRoll %d", targetRoll);
-
-    // if (fabsf(targetRoll) < 100.0f) {
-    //     Debug_Print(2, "neutral");
-    //     // this->actor.world.rot.z = 0; // this snaps it into neutral and it looks bad
-    //     Math_StepToS(&this->actor.world.rot.z, 0, 400);
-    // } else if (fabsf(rollDiff) < 100.0f) {
-    //     Debug_Print(2, "no idea");
-    //     this->actor.world.rot.z = targetRoll;
-    // } else if (rollDiff > 0.0f) {
-    //     Debug_Print(2, "left");
-    //     this->actor.world.rot.z += 200;
-    // } else {
-    //     Debug_Print(2, "right");
-    //     this->actor.world.rot.z -= 200;
-    // }
-
     Math_SmoothStepToS(&this->actor.world.rot.z, targetRoll, 6, ABS(rollDiff), 100);
-
-    // Debug_Print_Draw(0, play);
-    // Debug_Print_Draw(1, play);
-    // Debug_Print_Draw(2, play);
 
     this->actor.shape.rot.z = this->actor.world.rot.z;
 }
@@ -3567,8 +3548,7 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
             }
         }
         if (this->action != ENHORSE_ACT_INGO_RACE) {
-            EnHorse_TiltBody(this, play); // change this to tilt more faster and smoothly
-            // maybe change this inside the galloping code, so it does actually use the actual turn values?
+            EnHorse_TiltBody(this, play);
         }
         Collider_UpdateCylinder(thisx, &this->colliderCylinder1);
         Collider_UpdateCylinder(thisx, &this->colliderCylinder2);
@@ -3633,13 +3613,6 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
             this->colliderCylinder1.base.atFlags &= ~AT_ON;
         }
 
-        // change this to spawn grass
-        // Player_SpawnGrassBlade(play, &sp2C, &D_808545B4, &D_808545C0, 6, LINK_IS_CHILD ? 15 : 20);
-        /* if (SurfaceType_GetSfxOffset(&play->colCtx, this->actor.floorPoly, this->actor.floorBgId) ==
-            SURFACE_SFX_OFFSET_SAND) {
-            Math_ApproachF(&this->actor.shape.yOffset, sREG(80) + -2000.0f, 1.0f, (sREG(81) / 10.0f) + 50.0f);
-        } */
-       // 1 << i
         if (gSaveContext.save.entranceIndex != ENTR_LON_LON_RANCH_0 || gSaveContext.sceneLayer != 9) {
             for (u8 i = 0; i < 4; i++) {
                 if (this->dustFlags & (1 << i)) {
@@ -3654,25 +3627,6 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
                     }
                 }
             }
-            
-            
-            /* if (this->dustFlags & 1) {
-                this->dustFlags &= ~1;
-                func_800287AC(play, &this->frontRightHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } else if (this->dustFlags & 2) {
-                this->dustFlags &= ~2;
-                func_800287AC(play, &this->frontLeftHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } else if (this->dustFlags & 4) {
-                this->dustFlags &= ~4;
-                func_800287AC(play, &this->backRightHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } else if (this->dustFlags & 8) {
-                this->dustFlags &= ~8;
-                func_800287AC(play, &this->backLeftHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } */
         }
         this->stateFlags &= ~ENHORSE_DRAW;
     }
