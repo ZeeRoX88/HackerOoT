@@ -3633,8 +3633,30 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
             this->colliderCylinder1.base.atFlags &= ~AT_ON;
         }
 
+        // change this to spawn grass
+        // Player_SpawnGrassBlade(play, &sp2C, &D_808545B4, &D_808545C0, 6, LINK_IS_CHILD ? 15 : 20);
+        /* if (SurfaceType_GetSfxOffset(&play->colCtx, this->actor.floorPoly, this->actor.floorBgId) ==
+            SURFACE_SFX_OFFSET_SAND) {
+            Math_ApproachF(&this->actor.shape.yOffset, sREG(80) + -2000.0f, 1.0f, (sREG(81) / 10.0f) + 50.0f);
+        } */
+       // 1 << i
         if (gSaveContext.save.entranceIndex != ENTR_LON_LON_RANCH_0 || gSaveContext.sceneLayer != 9) {
-            if (this->dustFlags & 1) {
+            for (u8 i = 0; i < 4; i++) {
+                if (this->dustFlags & (1 << i)) {
+                    Vec3f hoofPtr[] = {this->frontRightHoof, this->frontLeftHoof, this->backRightHoof, this->backLeftHoof}; // not sure if this is a good idea
+                    this->dustFlags &= ~(1 << i);
+                    if (SurfaceType_GetSfxOffset(&play->colCtx, this->actor.floorPoly, this->actor.floorBgId) ==
+                        SURFACE_SFX_OFFSET_GRASS) {
+                        Player_SpawnGrassBlade(play, &hoofPtr[i], &dustVel, &dustAcc, 6, 20);
+                    } else {
+                        func_800287AC(play, &hoofPtr[i], &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
+                                      EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
+                    }
+                }
+            }
+            
+            
+            /* if (this->dustFlags & 1) {
                 this->dustFlags &= ~1;
                 func_800287AC(play, &this->frontRightHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
                               EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
@@ -3650,7 +3672,7 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
                 this->dustFlags &= ~8;
                 func_800287AC(play, &this->backLeftHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
                               EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            }
+            } */
         }
         this->stateFlags &= ~ENHORSE_DRAW;
     }
