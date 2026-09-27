@@ -1078,18 +1078,16 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
     temp_f12 = *stickAnglePtr * (1 / 32236.f);
     // this needs to be changed
     if (this->actor.speed > 0.0f) {
-        traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed));
-        if (traction > 2.0f) {
+        traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed)); // this is reversed now, but not sure if it is good
+        if (traction > 2.0f) { // clamp max traction to make it not too sensitive
            traction = 2.0f; 
         }
-        // traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed)); // this is reversed now, but not sure if it is good
     } else {
         traction = 2.2f;
     }
     /* traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed)); */ // this does dampen the turn with higher speeds
     // higher traction means faster/immediate turn
-    // less stick angle should result in a slower turn
-    turn = *stickAnglePtr * temp_f12 * temp_f12 * traction; // wtf is this
+    turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
     turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
     this->actor.world.rot.y += turn;
     this->actor.shape.rot.y = this->actor.world.rot.y;
