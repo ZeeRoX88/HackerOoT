@@ -30,6 +30,7 @@
 #include "player.h"
 #include "save.h"
 #include "skin_matrix.h"
+#include "z_debug.h"
 
 #include "assets/objects/object_horse/object_horse.h"
 #include "assets/objects/object_hni/object_hni.h"
@@ -3445,26 +3446,38 @@ void EnHorse_UpdatePlayerDir(EnHorse* this, PlayState* play) {
 // leaning
 void EnHorse_TiltBody(EnHorse* this, PlayState* play) {
     f32 speed;
-    f32 rollDiff;
     s32 targetRoll;
     s16 turnVel;
-
-    // this whole thing is very stuttery and not fluent enough
+    s16 rollDiff;
 
     speed = this->actor.speed / this->boostSpeed;
     turnVel = this->actor.shape.rot.y - this->lastYaw;
-    targetRoll = -((s16)((1820.0f * speed) * (turnVel / 480.00003f)));
+    targetRoll = -((s16)((1820.0f * speed) * (turnVel / 480.00003f))); // maybe change this
     rollDiff = targetRoll - this->actor.world.rot.z;
 
-    if (fabsf(targetRoll) < 100.0f) {
-        this->actor.world.rot.z = 0;
-    } else if (fabsf(rollDiff) < 100.0f) {
-        this->actor.world.rot.z = targetRoll;
-    } else if (rollDiff > 0.0f) {
-        this->actor.world.rot.z += 100;
-    } else {
-        this->actor.world.rot.z -= 100;
-    }
+    // Debug_Print(0, "rdiff %.3f", fabsf(rollDiff));
+    // Debug_Print(1, "tRoll %d", targetRoll);
+
+    // if (fabsf(targetRoll) < 100.0f) {
+    //     Debug_Print(2, "neutral");
+    //     // this->actor.world.rot.z = 0; // this snaps it into neutral and it looks bad
+    //     Math_StepToS(&this->actor.world.rot.z, 0, 400);
+    // } else if (fabsf(rollDiff) < 100.0f) {
+    //     Debug_Print(2, "no idea");
+    //     this->actor.world.rot.z = targetRoll;
+    // } else if (rollDiff > 0.0f) {
+    //     Debug_Print(2, "left");
+    //     this->actor.world.rot.z += 200;
+    // } else {
+    //     Debug_Print(2, "right");
+    //     this->actor.world.rot.z -= 200;
+    // }
+
+    Math_SmoothStepToS(&this->actor.world.rot.z, targetRoll, 6, ABS(rollDiff), 100);
+
+    // Debug_Print_Draw(0, play);
+    // Debug_Print_Draw(1, play);
+    // Debug_Print_Draw(2, play);
 
     this->actor.shape.rot.z = this->actor.world.rot.z;
 }
