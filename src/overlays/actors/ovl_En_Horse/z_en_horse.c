@@ -3863,9 +3863,5 @@ void EnHorse_Draw(Actor* thisx, PlayState* play) {
 
 /* 
 Notes:
-- continue to play idle animation when player mounts epona                                      XXX FIXED XXX
-- when epona is galloping stick direction will keep the speed, so speed doesn't decrease
-- decrease mounting duration, cut the player animation short
-- epona and link lean into direction, but it is too slow when quick turns happen and 
-  it suddenly sets back to normal when facing forward
+- problem with directional input is that it doesn't turn epona into camera direction when pressing forward, like player does
  */

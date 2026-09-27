@@ -574,7 +574,7 @@ CameraModeValue sSetNormal3ModeAimBoomerangData[] = {
  */
 
 CameraModeValue sSetHorseModeNormalData[] = {
-    CAM_FUNCDATA_NORM3(-50, 220, 250, 10, 16, 20, 60, 100,
+    CAM_FUNCDATA_NORM3(-50, 220, 250, 10, 7, 20, 60, 100,
                        CAM_INTERFACE_FIELD(CAM_LETTERBOX_NONE, CAM_HUD_VISIBILITY_A_HEARTS_MAGIC_MINIMAP_FORCE, 0)),
 };
 
