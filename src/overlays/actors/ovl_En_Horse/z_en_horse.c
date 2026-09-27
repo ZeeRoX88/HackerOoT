@@ -3066,9 +3066,6 @@ void EnHorse_StickDirection(Vec2f* curStick, f32* stickMag, s16* angle) {
     dist = sqrtf(SQ(x) + SQ(y));
 
     *stickMag = dist;
-    /* f32 temp;
-    temp = 1.0f - Math_CosS(dist * 450.0f);
-    *stickMag = temp; */
     if (dist > 60.0f) {
         *stickMag = 60.0f;
     } else {
