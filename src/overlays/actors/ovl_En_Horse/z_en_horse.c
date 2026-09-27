@@ -3045,8 +3045,8 @@ void EnHorse_MountDismount(EnHorse* this, PlayState* play) {
     }
 
     if (!this->playerControlled && Actor_IsMounted(play, &this->actor) == true) {
-        this->noInputTimer = 55;
-        this->noInputTimerMax = 55;
+        this->noInputTimer = 35;
+        this->noInputTimerMax = 35;
         this->playerControlled = 1;
         EnHorse_Freeze(this);
     } else if (this->playerControlled == true && Actor_NotMounted(play, &this->actor) == true) {

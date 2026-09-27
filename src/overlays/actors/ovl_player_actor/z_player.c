@@ -7199,6 +7199,7 @@ static struct_80854578 D_80854578[] = {
     { &gPlayerAnim_link_uma_right_up, -34.16f, 7.91f },
 };
 
+// mount horse
 s32 Player_ActionHandler_3(Player* this, PlayState* play) {
     EnHorse* rideActor = (EnHorse*)this->rideActor;
 
@@ -7235,7 +7236,9 @@ s32 Player_ActionHandler_3(Player* this, PlayState* play) {
         this->yaw = this->actor.shape.rot.y = rideActor->actor.shape.rot.y;
 
         Actor_MountHorse(play, this, &rideActor->actor);
-        Player_AnimPlayOnce(play, this, D_80854578[temp].anim);
+        // Player_AnimPlayOnce(play, this, D_80854578[temp].anim);
+        LinkAnimation_Change(play, &this->skelAnime, D_80854578[temp].anim, 1.5f, 0.0f, Animation_GetLastFrame(D_80854578[temp].anim), ANIMMODE_ONCE,
+                         0.0f);
         Player_StartAnimMovement(play, this,
                                  ANIM_FLAG_UPDATE_XZ | ANIM_FLAG_UPDATE_Y | ANIM_FLAG_ENABLE_MOVEMENT |
                                      ANIM_FLAG_ADJUST_STARTING_POS | ANIM_FLAG_OVERRIDE_MOVEMENT);
