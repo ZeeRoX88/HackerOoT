@@ -1089,7 +1089,9 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
     // higher traction means faster/immediate turn
     turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
     turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
-    this->actor.world.rot.y += turn;
+    // this->actor.world.rot.y += turn;
+    s16 testata = *stickAnglePtr + Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
+    Math_SmoothStepToS(&this->actor.world.rot.y, testata, 10, 4000, 800);
     this->actor.shape.rot.y = this->actor.world.rot.y;
 }
 
