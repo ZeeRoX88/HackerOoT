@@ -1008,8 +1008,8 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
     f32 stickMag;
     s16 stickAngle;
     f32 temp_f12;
-    f32 traction;
-    s16 turn;
+    // f32 traction;
+    // s16 turn;
 
     if (!EnHorse_PlayerCanMove(this, play)) {
         if (this->actor.speed > 8) {
@@ -1074,24 +1074,20 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
             }
         }
     }
-
+    /* 
     temp_f12 = *stickAnglePtr * (1 / 32236.f);
-    // this needs to be changed
-    if (this->actor.speed > 0.0f) {
-        traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed)); // this is reversed now, but not sure if it is good
-        if (traction > 2.0f) { // clamp max traction to make it not too sensitive
-           traction = 2.0f; 
-        }
-    } else {
-        traction = 2.2f;
-    }
-    /* traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed)); */ // this does dampen the turn with higher speeds
+    
+    // traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed)); // reverse
+
+    traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed)); // this does dampen the turn with higher speeds
     // higher traction means faster/immediate turn
     turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
     turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
-    // this->actor.world.rot.y += turn;
+
+    this->actor.world.rot.y += turn;
+     */
     s16 testata = *stickAnglePtr + Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
-    Math_SmoothStepToS(&this->actor.world.rot.y, testata, 10, 4000, 800);
+    Math_SmoothStepToS(&this->actor.world.rot.y, testata, 10, 4000, 400);
     this->actor.shape.rot.y = this->actor.world.rot.y;
 }
 
