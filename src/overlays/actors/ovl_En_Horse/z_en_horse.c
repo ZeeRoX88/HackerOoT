@@ -3600,13 +3600,13 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
         if (gSaveContext.save.entranceIndex != ENTR_LON_LON_RANCH_0 || gSaveContext.sceneLayer != 9) {
             for (u8 i = 0; i < 4; i++) {
                 if (this->dustFlags & (1 << i)) {
-                    Vec3f hoofPtr[] = {this->frontRightHoof, this->frontLeftHoof, this->backRightHoof, this->backLeftHoof}; // not sure if this is a good idea
+                    void* hoofPtr[] = {&this->frontRightHoof, &this->frontLeftHoof, &this->backRightHoof, &this->backLeftHoof};
                     this->dustFlags &= ~(1 << i);
                     if (SurfaceType_GetSfxOffset(&play->colCtx, this->actor.floorPoly, this->actor.floorBgId) ==
                         SURFACE_SFX_OFFSET_GRASS) {
-                        Player_SpawnGrassBlade(play, &hoofPtr[i], &dustVel, &dustAcc, 6, 20);
+                        Player_SpawnGrassBlade(play, hoofPtr[i], &dustVel, &dustAcc, 6, 20);
                     } else {
-                        func_800287AC(play, &hoofPtr[i], &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
+                        func_800287AC(play, hoofPtr[i], &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
                                       EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
                     }
                 }
