@@ -1008,8 +1008,8 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
     f32 stickMag;
     s16 stickAngle;
     f32 temp_f12;
-    // f32 traction;
-    // s16 turn;
+    f32 traction;
+    s16 adjInput;
 
     if (!EnHorse_PlayerCanMove(this, play)) {
         if (this->actor.speed > 8) {
@@ -1074,20 +1074,11 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
             }
         }
     }
-    /* 
-    temp_f12 = *stickAnglePtr * (1 / 32236.f);
-    
-    // traction = 1.2f + (this->actor.speed * (1.0f / this->boostSpeed)); // reverse
 
-    traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed)); // this does dampen the turn with higher speeds
-    // higher traction means faster/immediate turn
-    turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
-    turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
+    adjInput = *stickAnglePtr + Camera_GetInputDirYaw(GET_ACTIVE_CAM(play)); // control stick inputs aligned to current camera yaw
+    traction = 2.0f - (this->actor.speed * (1.0f / this->boostSpeed)); // dampens the turns when horse is slower, vanilla does the opposite
 
-    this->actor.world.rot.y += turn;
-     */
-    s16 testata = *stickAnglePtr + Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
-    Math_SmoothStepToS(&this->actor.world.rot.y, testata, 10, 4000, 400);
+    Math_SmoothStepToS(&this->actor.world.rot.y, adjInput, 11 + (s16)(traction), 4000, 10);
     this->actor.shape.rot.y = this->actor.world.rot.y;
 }
 
@@ -1394,7 +1385,7 @@ void EnHorse_MountedGallop(EnHorse* this, PlayState* play) {
     EnHorse_StickDirection(&this->curStick, &stickMag, &stickAngle);
 
     if (this->noInputTimer <= 0.0f) {
-        EnHorse_UpdateSpeed(this, play, 0.3f, -0.5f, 10.0f, 0.06f, 8.0f, 500); // might need a speed condition
+        EnHorse_UpdateSpeed(this, play, 0.3f, -0.5f, 10.0f, 0.06f, 8.0f, 400);
     } else if (this->noInputTimer > 0.0f) {
         this->noInputTimer--;
         this->actor.speed = 8.0f;
@@ -3448,7 +3439,7 @@ void EnHorse_TiltBody(EnHorse* this, PlayState* play) {
 
     speed = this->actor.speed / this->boostSpeed;
     turnVel = this->actor.shape.rot.y - this->lastYaw;
-    targetRoll = -((s16)((1820.0f * speed) * (turnVel / 480.00003f))); // maybe change this
+    targetRoll = -((s16)((1820.0f * speed) * (turnVel / 480.00003f)));
     rollDiff = targetRoll - this->actor.world.rot.z;
 
     Math_SmoothStepToS(&this->actor.world.rot.z, targetRoll, 6, ABS(rollDiff), 100);
@@ -3816,9 +3807,6 @@ void EnHorse_PostDraw(Actor* thisx, PlayState* play, Skin* skin) {
     CollisionCheck_SetAC(play, &play->colChkCtx, &this->colliderJntSph.base);
 }
 
-// unused
-static s32 D_80A667DC[] = { 0, 3, 7, 14 };
-
 s32 EnHorse_OverrideLimbDraw(Actor* thisx, PlayState* play, s32 limbIndex, Skin* arg3) {
     static void* eyeTextures[] = {
         gEponaEyeOpenTex,
@@ -3858,8 +3846,3 @@ void EnHorse_Draw(Actor* thisx, PlayState* play) {
         }
     }
 }
-
-/* 
-Notes:
-- problem with directional input is that it doesn't turn epona into camera direction when pressing forward, like player does
- */
