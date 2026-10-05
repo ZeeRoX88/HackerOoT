@@ -148,7 +148,8 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     Vtx* vtx;
     u8 i;
 
-    vtx = Graph_Alloc(gfxCtx, sizeof(Vtx) * 37);
+    // vtx = Graph_Alloc(gfxCtx, sizeof(Vtx) * 37);
+    vtx = skybox_cylinder_vertices;
 
     if (vtx != NULL) {
         for (i = 0; i < 37; i++) {
