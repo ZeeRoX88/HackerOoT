@@ -2128,6 +2128,13 @@ s32 Camera_Normal3(Camera* camera) {
 
     if (camera->status == CAM_STAT_ACTIVE) {
         func_80046E20(camera, &sp84, roData->distMin, roData->yawUpdateSpeed, &sp8C, &rwData->swing);
+
+        // input yaw for better controls
+        VecGeo eyeAdjustment;
+        eyeAdjustment = OLib_Vec3fDiffToVecGeo(eye, at);
+        camera->inputDir.x = eyeAdjustment.pitch;
+        camera->inputDir.y = eyeAdjustment.yaw;
+        camera->inputDir.z = 0;
     } else {
         *eye = *eyeNext;
     }

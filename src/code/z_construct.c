@@ -339,7 +339,7 @@ void Regs_InitDataImpl(void) {
     ZREG(12) = 200;
     R_PAUSE_PAGE_SWITCH_FRAME_ADVANCE_ON = false;
     ZREG(14) = 110;
-    ZREG(15) = 56;
+    ZREG(15) = 206; // 56, horse carrot interface
     ZREG(16) = 1;
     ZREG(17) = -50;
     ZREG(18) = -200;

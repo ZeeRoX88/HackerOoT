@@ -30,6 +30,7 @@
 #include "player.h"
 #include "save.h"
 #include "skin_matrix.h"
+#include "z_debug.h"
 
 #include "assets/objects/object_horse/object_horse.h"
 #include "assets/objects/object_hni/object_hni.h"
@@ -957,6 +958,7 @@ void EnHorse_StartMountedIdle(EnHorse* this);
 void EnHorse_StartGalloping(EnHorse* this);
 
 void EnHorse_Frozen(EnHorse* this, PlayState* play) {
+    SkelAnime_Update(&this->skin.skelAnime);
     this->actor.speed = 0.0f;
     this->noInputTimer--;
     if (this->noInputTimer < 0) {
@@ -1007,7 +1009,7 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
     s16 stickAngle;
     f32 temp_f12;
     f32 traction;
-    s16 turn;
+    s16 adjInput;
 
     if (!EnHorse_PlayerCanMove(this, play)) {
         if (this->actor.speed > 8) {
@@ -1073,11 +1075,10 @@ void EnHorse_UpdateSpeed(EnHorse* this, PlayState* play, f32 brakeDecel, f32 bra
         }
     }
 
-    temp_f12 = *stickAnglePtr * (1 / 32236.f);
-    traction = 2.2f - (this->actor.speed * (1.0f / this->boostSpeed));
-    turn = *stickAnglePtr * temp_f12 * temp_f12 * traction;
-    turn = CLAMP(turn, -turnSpeed * traction, turnSpeed * traction);
-    this->actor.world.rot.y += turn;
+    adjInput = *stickAnglePtr + Camera_GetInputDirYaw(GET_ACTIVE_CAM(play)); // control stick inputs aligned to current camera yaw
+    traction = 2.0f - (this->actor.speed * (1.0f / this->boostSpeed)); // dampens the turns when horse is slower, vanilla does the opposite
+
+    Math_SmoothStepToS(&this->actor.world.rot.y, adjInput, 11 + (s16)(traction), 4000, 10);
     this->actor.shape.rot.y = this->actor.world.rot.y;
 }
 
@@ -1215,7 +1216,7 @@ void EnHorse_StartWalkingFromIdle(EnHorse* this) {
 
     if (!(this->stateFlags & ENHORSE_FLAG_8) && !(this->stateFlags & ENHORSE_FLAG_9)) {
         this->stateFlags |= ENHORSE_FLAG_9;
-        this->waitTimer = 8;
+        this->waitTimer = 0;
         return;
     }
     this->waitTimer = 0;
@@ -1384,7 +1385,7 @@ void EnHorse_MountedGallop(EnHorse* this, PlayState* play) {
     EnHorse_StickDirection(&this->curStick, &stickMag, &stickAngle);
 
     if (this->noInputTimer <= 0.0f) {
-        EnHorse_UpdateSpeed(this, play, 0.3f, -0.5f, 10.0f, 0.06f, 8.0f, 0x190);
+        EnHorse_UpdateSpeed(this, play, 0.3f, -0.5f, 10.0f, 0.06f, 8.0f, 400);
     } else if (this->noInputTimer > 0.0f) {
         this->noInputTimer--;
         this->actor.speed = 8.0f;
@@ -3031,8 +3032,8 @@ void EnHorse_MountDismount(EnHorse* this, PlayState* play) {
     }
 
     if (!this->playerControlled && Actor_IsMounted(play, &this->actor) == true) {
-        this->noInputTimer = 55;
-        this->noInputTimerMax = 55;
+        this->noInputTimer = 35;
+        this->noInputTimerMax = 35;
         this->playerControlled = 1;
         EnHorse_Freeze(this);
     } else if (this->playerControlled == true && Actor_NotMounted(play, &this->actor) == true) {
@@ -3429,26 +3430,19 @@ void EnHorse_UpdatePlayerDir(EnHorse* this, PlayState* play) {
     }
 }
 
+// leaning
 void EnHorse_TiltBody(EnHorse* this, PlayState* play) {
     f32 speed;
-    f32 rollDiff;
     s32 targetRoll;
     s16 turnVel;
+    s16 rollDiff;
 
     speed = this->actor.speed / this->boostSpeed;
     turnVel = this->actor.shape.rot.y - this->lastYaw;
     targetRoll = -((s16)((1820.0f * speed) * (turnVel / 480.00003f)));
     rollDiff = targetRoll - this->actor.world.rot.z;
 
-    if (fabsf(targetRoll) < 100.0f) {
-        this->actor.world.rot.z = 0;
-    } else if (fabsf(rollDiff) < 100.0f) {
-        this->actor.world.rot.z = targetRoll;
-    } else if (rollDiff > 0.0f) {
-        this->actor.world.rot.z += 100;
-    } else {
-        this->actor.world.rot.z -= 100;
-    }
+    Math_SmoothStepToS(&this->actor.world.rot.z, targetRoll, 6, ABS(rollDiff), 100);
 
     this->actor.shape.rot.z = this->actor.world.rot.z;
 }
@@ -3604,22 +3598,18 @@ void EnHorse_Update(Actor* thisx, PlayState* play2) {
         }
 
         if (gSaveContext.save.entranceIndex != ENTR_LON_LON_RANCH_0 || gSaveContext.sceneLayer != 9) {
-            if (this->dustFlags & 1) {
-                this->dustFlags &= ~1;
-                func_800287AC(play, &this->frontRightHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } else if (this->dustFlags & 2) {
-                this->dustFlags &= ~2;
-                func_800287AC(play, &this->frontLeftHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } else if (this->dustFlags & 4) {
-                this->dustFlags &= ~4;
-                func_800287AC(play, &this->backRightHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
-            } else if (this->dustFlags & 8) {
-                this->dustFlags &= ~8;
-                func_800287AC(play, &this->backLeftHoof, &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
-                              EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
+            for (u8 i = 0; i < 4; i++) {
+                if (this->dustFlags & (1 << i)) {
+                    void* hoofPtr[] = {&this->frontRightHoof, &this->frontLeftHoof, &this->backRightHoof, &this->backLeftHoof};
+                    this->dustFlags &= ~(1 << i);
+                    if (SurfaceType_GetSfxOffset(&play->colCtx, this->actor.floorPoly, this->actor.floorBgId) ==
+                        SURFACE_SFX_OFFSET_GRASS) {
+                        Player_SpawnGrassBlade(play, hoofPtr[i], &dustVel, &dustAcc, 6, 20);
+                    } else {
+                        func_800287AC(play, hoofPtr[i], &dustVel, &dustAcc, EnHorse_RandInt(100) + 200,
+                                      EnHorse_RandInt(10) + 30, EnHorse_RandInt(20) + 30);
+                    }
+                }
             }
         }
         this->stateFlags &= ~ENHORSE_DRAW;
@@ -3816,9 +3806,6 @@ void EnHorse_PostDraw(Actor* thisx, PlayState* play, Skin* skin) {
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->colliderJntSph.base);
     CollisionCheck_SetAC(play, &play->colChkCtx, &this->colliderJntSph.base);
 }
-
-// unused
-static s32 D_80A667DC[] = { 0, 3, 7, 14 };
 
 s32 EnHorse_OverrideLimbDraw(Actor* thisx, PlayState* play, s32 limbIndex, Skin* arg3) {
     static void* eyeTextures[] = {
