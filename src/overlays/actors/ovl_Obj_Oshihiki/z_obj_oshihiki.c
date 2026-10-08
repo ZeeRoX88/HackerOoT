@@ -20,6 +20,7 @@
 #include "z_lib.h"
 #include "play_state.h"
 #include "player.h"
+#include "effect.h"
 
 #include "assets/objects/gameplay_dangeon_keep/gameplay_dangeon_keep.h"
 
@@ -565,6 +566,27 @@ void ObjOshihiki_Push(ObjOshihiki* this, PlayState* play) {
     thisx->world.pos.x = thisx->home.pos.x + (pushDistSigned * this->yawSin);
     thisx->world.pos.z = thisx->home.pos.z + (pushDistSigned * this->yawCos);
 
+    Vec3f dustPos;
+    static Vec3f dustAcc[] = { 0.0f, 0.0f, 0.0f };
+    Vec3f dustVel;
+
+    dustVel.x = 0.0f;
+    dustVel.y = 1.0f;
+    dustVel.z = 0.0f;
+
+    // this->direction is pushing or pulling
+    dustPos.x = thisx->world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y - 0x2000) * 80.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+    dustPos.y = this->dyna.actor.floorHeight;
+    dustPos.z = thisx->world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y - 0x2000) * 80.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+
+    func_800287AC(play, &dustPos, &dustVel, dustAcc, 300, 20, 15);
+
+    dustPos.x = thisx->world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y + 0x2000) * 80.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+    dustPos.y = this->dyna.actor.floorHeight;
+    dustPos.z = thisx->world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y + 0x2000) * 80.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+
+    func_800287AC(play, &dustPos, &dustVel, dustAcc, 300, 20, 15);
+
     if (!ObjOshihiki_CheckFloor(this, play)) {
         thisx->home.pos.x = thisx->world.pos.x;
         thisx->home.pos.z = thisx->world.pos.z;
@@ -684,6 +706,6 @@ void ObjOshihiki_Draw(Actor* thisx, PlayState* play) {
     gDPSetEnvColor(POLY_OPA_DISP++, this->color.r, this->color.g, this->color.b, 255);
 #endif
 
-    gSPDisplayList(POLY_OPA_DISP++, gPushBlockDL);
+    // gSPDisplayList(POLY_OPA_DISP++, gPushBlockDL);
     CLOSE_DISPS(play->state.gfxCtx, "../z_obj_oshihiki.c", 1334);
 }
