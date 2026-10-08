@@ -87,16 +87,6 @@ void ObjEnvcloud_Update(Actor* thisx, PlayState* play) {
 }
 
 void ObjEnvcloud_Draw(Actor* thisx, PlayState* play) {
-    switch (thisx->params) {
-        case 0:
-            ObjEnvcloud_DrawClouds(thisx, play);
-            break;
-        default:
-            break;
-    }
-}
-
-void ObjEnvcloud_DrawClouds(Actor* thisx, PlayState* play) {
     ObjEnvcloud* this = (ObjEnvcloud*)thisx;
     f32 dist;
     f32 dx;
@@ -162,15 +152,8 @@ void ObjEnvcloud_DrawClouds(Actor* thisx, PlayState* play) {
                     // movement
                     this->effects[i].pos.x += 0.5f; // sinf(0.05f); // direction
                     this->effects[i].pos.z += 0.5f; // cosf(0.05f); // direction
-                    // this->effects[i].pos.y += -this->effects[i].speed;
 
                     maxDist = 120.0f;
-                    // this needs camera distance check for being too close to camera
-
-                    /* if (Math_Vec3f_DistXZ(&this->effectPos[i], &play->view.eye) <= 200.0f ||
-                        Math_Vec3f_DistXZ(&this->effectPos[i], &play->view.eye) >= 1000.0f) {
-                        this->effectState[i] = OFOG_STATE_CLEAR;
-                    } */
 
                     Vec3f test;
                     test.x = this->effects[i].pos.x + this->effects[i].base.x;
