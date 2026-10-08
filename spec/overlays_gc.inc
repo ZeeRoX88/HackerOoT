@@ -3184,6 +3184,13 @@ beginseg
 endseg
 
 beginseg
+    name "ovl_Obj_Envcloud"
+    compress
+    include "$(BUILD_DIR)/src/overlays/actors/ovl_Obj_Envcloud/z_obj_envcloud.o"
+    include "$(BUILD_DIR)/src/overlays/actors/ovl_Obj_Envcloud/ovl_Obj_Envcloud_reloc.o"
+endseg
+
+beginseg
     name "ovl_Object_Kankyo"
     compress
     include "$(BUILD_DIR)/src/overlays/actors/ovl_Object_Kankyo/z_object_kankyo.o"

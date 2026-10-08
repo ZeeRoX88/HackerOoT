@@ -632,6 +632,9 @@ void Play_Init(GameState* thisx) {
     if ((this->skyboxId == SKYBOX_NORMAL_SKY) && !(gSaveContext.save.cutsceneIndex >= CS_INDEX_0)) {
         Environment_DynamicWeather(this);
     }
+
+    // test spawn envcloud actor
+    Actor_Spawn(&this->actorCtx, this, ACTOR_OBJ_ENVCLOUD, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void Play_Update(PlayState* this) {
