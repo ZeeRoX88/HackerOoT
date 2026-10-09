@@ -39,10 +39,10 @@ ActorEntry example_room_0_header00_actorList[LENGTH_EXAMPLE_ROOM_0_HEADER00_ACTO
 
     // Dungeon Switches
     {
-        /* Actor ID   */ ACTOR_OBJ_SWITCH,
+        /* Actor ID   */ ACTOR_OBJ_FLOORFOG,
         /* Position   */ { -308, 0, -437 },
         /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
-        /* Parameters */ (0x0003 | (((0x1 << 8) & 0x3F00) | (1 << 4)))
+        /* Parameters */ (0x0000)
     },
 
     // Torch
@@ -85,10 +85,10 @@ ActorEntry example_room_0_header01_actorList[LENGTH_EXAMPLE_ROOM_0_HEADER01_ACTO
 
     // Dungeon Switches
     {
-        /* Actor ID   */ ACTOR_OBJ_SWITCH,
+        /* Actor ID   */ ACTOR_OBJ_FLOORFOG,
         /* Position   */ { -308, 0, -437 },
         /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
-        /* Parameters */ (0x0003 | (((0x1 << 8) & 0x3F00) | (1 << 4)))
+        /* Parameters */ (0x0000)
     },
 
     // Torch
@@ -131,10 +131,10 @@ ActorEntry example_room_0_header02_actorList[LENGTH_EXAMPLE_ROOM_0_HEADER02_ACTO
 
     // Dungeon Switches
     {
-        /* Actor ID   */ ACTOR_OBJ_SWITCH,
+        /* Actor ID   */ ACTOR_OBJ_FLOORFOG,
         /* Position   */ { -308, 0, -437 },
         /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
-        /* Parameters */ (0x0003 | (((0x1 << 8) & 0x3F00) | (1 << 4)))
+        /* Parameters */ (0x0000)
     },
 
     // Torch
@@ -177,10 +177,10 @@ ActorEntry example_room_0_header03_actorList[LENGTH_EXAMPLE_ROOM_0_HEADER03_ACTO
 
     // Dungeon Switches
     {
-        /* Actor ID   */ ACTOR_OBJ_SWITCH,
+        /* Actor ID   */ ACTOR_OBJ_FLOORFOG,
         /* Position   */ { -308, 0, -437 },
         /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
-        /* Parameters */ (0x0003 | (((0x1 << 8) & 0x3F00) | (1 << 4)))
+        /* Parameters */ (0x0000)
     },
 
     // Torch

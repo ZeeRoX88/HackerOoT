@@ -48,7 +48,6 @@ ActorProfile Obj_Floorfog_Profile = {
 };
 
 static u8 sIsSpawned = false;
-static s16 sTrailingFairies = 0;
 
 void ObjFloorfog_SetupAction(ObjFloorfog* this, ObjFloorfogActionFunc action) {
     this->actionFunc = action;
@@ -56,16 +55,25 @@ void ObjFloorfog_SetupAction(ObjFloorfog* this, ObjFloorfogActionFunc action) {
 
 void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
-    s32 pad;
     s16 i;
-
-    for (i = 0; i < ARRAY_COUNT(this->effects); i++) {
-        this->effects[i].state = 0;
-    }
 
     this->actor.room = -1;
 
     if (!sIsSpawned) {
+        s32 bgId;
+        Vec3f checkPos;
+
+        checkPos.x = this->actor.world.pos.x;
+        checkPos.y = this->actor.world.pos.y + 50.0f;
+        checkPos.z = this->actor.world.pos.z;
+
+        this->actor.floorHeight =
+        BgCheck_EntityRaycastDown4(&play->colCtx, &this->actor.floorPoly, &bgId, &this->actor, &checkPos);
+
+        for (i = 0; i < ARRAY_COUNT(this->effects); i++) {
+            this->effects[i].state = 0;
+        }
+
         ObjFloorfog_SetupAction(this, ObjFloorfog_Snow);
         sIsSpawned = true;
     } else {
@@ -88,132 +96,47 @@ void ObjFloorfog_Update(Actor* thisx, PlayState* play) {
 
 void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
-    f32 dist;
-    f32 dx;
-    f32 dy;
-    f32 dz;
-    f32 maxDist;
-    f32 baseX;
-    f32 baseY;
-    f32 baseZ;
-    s16 i;
-    Vec3f viewForwards;
     Player* player = GET_PLAYER(play);
+    u8 i;
 
     if (!(play->cameraPtrs[CAM_ID_MAIN]->stateFlags & CAM_STATE_CAMERA_IN_WATER)) {
         OPEN_DISPS(play->state.gfxCtx, "../z_object_kankyo.c", 958);
 
-        for (i = 0; i < 10; i++) {
+        for (i = 0; i < FLOORFOG_EFFECT_MAX; i++) {
             switch (this->effects[i].state) {
+                s16 randAngle;
+                s16 randDist;
+                s16 test;
+
                 case 0: // init
-                    // spawn in front of the camera
-                    dx = play->view.at.x - play->view.eye.x;
-                    dy = play->view.at.y - play->view.eye.y;
-                    dz = play->view.at.z - play->view.eye.z;
-                    dist = sqrtf(SQ(dx) + SQ(dy) + SQ(dz));
+                    randAngle = (s16)(Rand_Next() >> 16); // fastest way to calculate random binary angle, Thar0
+                    randDist = (s16)(250.0f * sqrtf(Rand_ZeroOne()));
 
-                    viewForwards.x = dx / dist;
-                    viewForwards.y = dy / dist;
-                    viewForwards.z = dz / dist;
+                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(randAngle) * randDist);
+                    this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
+                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(randAngle) * randDist);
 
-                    // fake
-                    this->effects[i].base.x = play->view.eye.x + viewForwards.x * 120.0f;
-                    this->effects[i].base.y = play->view.eye.y + viewForwards.y * 120.0f;
-                    this->effects[i].base.z = play->view.eye.z + viewForwards.z * 120.0f;
+                    this->effects[i].alpha = 255;
+                    this->effects[i].scale = Rand_ZeroOne() + 1.5f;
 
-                    this->effects[i].pos.x = (Rand_ZeroOne() - 0.5f) * 160.0f;
-                    this->effects[i].pos.y = (Rand_ZeroOne() - 0.5f) * 80.0f;
-                    this->effects[i].pos.z = (Rand_ZeroOne() - 0.5f) * 160.0f;
-                    // hmm
-                    /* if (this->effects[i].base.y + this->effects[i].pos.y < 50.0f) {
-                        this->effects[i].base.y = 50.0f;
-                    } */
-                    this->effects[i].speed = Rand_ZeroOne() * 5.0f + 0.5f;
-                    this->effects[i].dirPhase.x = Rand_ZeroOne() * 360.0f;
-                    this->effects[i].dirPhase.z = Rand_ZeroOne() * 360.0f;
-                    this->effects[i].alpha = 0;
                     this->effects[i].state++;
                     break;
-
                 case 1: // moving
-                    dx = play->view.at.x - play->view.eye.x;
-                    dy = play->view.at.y - play->view.eye.y;
-                    dz = play->view.at.z - play->view.eye.z;
-                    dist = sqrtf(SQ(dx) + SQ(dy) + SQ(dz));
-
-                    viewForwards.x = dx / dist;
-                    viewForwards.y = dy / dist;
-                    viewForwards.z = dz / dist;
-
-                    baseX = play->view.eye.x + viewForwards.x * 120.0f;
-                    baseY = play->view.eye.y + viewForwards.y * 120.0f;
-                    baseZ = play->view.eye.z + viewForwards.z * 120.0f;
-
-                    // movement
-                    this->effects[i].pos.x += 0.5f; // sinf(0.05f); // direction
-                    this->effects[i].pos.z += 0.5f; // cosf(0.05f); // direction
-
-                    maxDist = 120.0f;
-
-                    Vec3f test;
-                    test.x = this->effects[i].pos.x + this->effects[i].base.x;
-                    test.z = this->effects[i].pos.z + this->effects[i].base.z;
-                    if (Math_Vec3f_DistXZ(&test, &play->view.eye) <= 80.0f ||
-                        this->effects[i].base.x + this->effects[i].pos.x - baseX > maxDist ||
-                        this->effects[i].base.x + this->effects[i].pos.x - baseX < -maxDist ||
-                        this->effects[i].base.y + this->effects[i].pos.y - baseY > 50.0f ||
-                        this->effects[i].base.y + this->effects[i].pos.y - baseY < -50.0f ||
-                        this->effects[i].base.z + this->effects[i].pos.z - baseZ > maxDist ||
-                        this->effects[i].base.z + this->effects[i].pos.z - baseZ < -maxDist) {
-
-                        this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 2, 0);
-
-                        if (this->effects[i].alpha == 0) {
-                            this->effects[i].state = 0;
-                        }
-
-                        // when off screen, wrap around to the other side
-                        /* if (this->effects[i].base.x + this->effects[i].pos.x - baseX > maxDist && this->effects[i].alpha == 0) {
-                            this->effects[i].base.x = baseX - maxDist;
-                            this->effects[i].pos.x = 0.0f;
-                        }
-                        if (this->effects[i].base.x + this->effects[i].pos.x - baseX < -maxDist && this->effects[i].alpha == 0) {
-                            this->effects[i].base.x = baseX + maxDist;
-                            this->effects[i].pos.x = 0.0f;
-                        }
-                        if (this->effects[i].base.z + this->effects[i].pos.z - baseZ > maxDist && this->effects[i].alpha == 0) {
-                            this->effects[i].base.z = baseZ - maxDist;
-                            this->effects[i].pos.z = 0.0f;
-                        }
-                        if (this->effects[i].base.z + this->effects[i].pos.z - baseZ < -maxDist && this->effects[i].alpha == 0) {
-                            this->effects[i].base.z = baseZ + maxDist;
-                            this->effects[i].pos.z = 0.0f;
-                        }
-                        if (this->effects[i].base.y + this->effects[i].pos.y - baseY > 50.0f && this->effects[i].alpha == 0) {
-                            this->effects[i].base.y = baseY - 50.0f;
-                            this->effects[i].pos.y = 0.0f;
-                        }
-                        if (this->effects[i].base.y + this->effects[i].pos.y - baseY < -50.0f && this->effects[i].alpha == 0) {
-                            this->effects[i].base.y = baseY + 50.0f;
-                            this->effects[i].pos.y = 0.0f;
-                        } */
-                    } else {
-                        this->effects[i].alpha = CLAMP_MAX(this->effects[i].alpha + 1, 20);
-                    }
+                    test = (s16)this->effects[i].pos.x;
+                    this->effects[i].alpha = (u8)(127.0f * Math_SinS((play->gameplayFrames + test) * 0x200) + 127.0f);
                     break;
-
                 case 2: // reset
                     this->effects[i].state = 0;
                     break;
-
                 default:
                     break;
             }
 
-            Matrix_Translate(this->effects[i].base.x + this->effects[i].pos.x,
-                             this->effects[i].base.y + this->effects[i].pos.y,
-                             this->effects[i].base.z + this->effects[i].pos.z, MTXMODE_NEW);
-            Matrix_Scale(1.5f, 1.5f, 1.5f, MTXMODE_APPLY);
+            Matrix_Translate(this->effects[i].pos.x,
+                             this->effects[i].pos.y,
+                             this->effects[i].pos.z, MTXMODE_NEW);
+            Matrix_RotateX(BINANG_TO_RAD(-0x4000), MTXMODE_APPLY);
+            Matrix_Scale(this->effects[i].scale, this->effects[i].scale, this->effects[i].scale, MTXMODE_APPLY);
             gDPPipeSync(POLY_XLU_DISP++);
 
             gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 200, 200, 200, this->effects[i].alpha);
@@ -224,10 +147,10 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
             gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(gDust5Tex));
 
             Gfx_SetupDL_61Xlu(play->state.gfxCtx);
-            // gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD); // disable this for emulator
-            gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
+            gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD); // disable this for emulator
+            // gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
 
-            gSPMatrix(POLY_XLU_DISP++, &D_01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW); // billboard mtx
+            // gSPMatrix(POLY_XLU_DISP++, &D_01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW); // billboard mtx
 
             gDPPipeSync(POLY_XLU_DISP++);
 

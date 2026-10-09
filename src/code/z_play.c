@@ -630,7 +630,7 @@ void Play_Init(GameState* thisx) {
 
     // add some conditions here when dynamic weather shouldn't happen, cutscenes for example or specific scenes
     if ((this->skyboxId == SKYBOX_NORMAL_SKY) && !(gSaveContext.save.cutsceneIndex >= CS_INDEX_0)) {
-        Environment_DynamicWeather(this);
+        // Environment_DynamicWeather(this);
     }
 
     // test spawn envcloud actor
@@ -1558,7 +1558,7 @@ void Play_Draw(PlayState* this) {
                     if (this->skyboxCtx.drawType == SKYBOX_DRAW_128) {
                         Environment_UpdateSkybox(this->skyboxId, &this->envCtx, &this->skyboxCtx);
                         if ((this->skyboxId == SKYBOX_NORMAL_SKY) && ((this->gameplayFrames % 200) == 0) && !(gSaveContext.save.cutsceneIndex >= CS_INDEX_0)) {
-                            Environment_DynamicWeather(this);
+                            // Environment_DynamicWeather(this);
                         }
                     }
                     Environment_DrawSkybox(this);

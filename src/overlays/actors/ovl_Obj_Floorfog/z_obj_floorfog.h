@@ -4,7 +4,7 @@
 #include "ultra64.h"
 #include "actor.h"
 
-#define FLOORFOG_EFFECT_MAX 30
+#define FLOORFOG_EFFECT_MAX 99
 
 struct ObjFloorfog;
 
@@ -14,6 +14,7 @@ typedef struct ObjFloorfogEffect {
     /* 0x00 */ u8 state;
     /* 0x04 */ Vec3f pos;
     /* 0x40 */ u8 alpha;
+               f32 scale;
 } ObjFloorfogEffect; // size = 0x54
 
 typedef struct ObjFloorfog {
