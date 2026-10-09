@@ -3191,6 +3191,13 @@ beginseg
 endseg
 
 beginseg
+    name "ovl_Obj_Floorfog"
+    compress
+    include "$(BUILD_DIR)/src/overlays/actors/ovl_Obj_Floorfog/z_obj_floorfog.o"
+    include "$(BUILD_DIR)/src/overlays/actors/ovl_Obj_Floorfog/ovl_Obj_Floorfog_reloc.o"
+endseg
+
+beginseg
     name "ovl_Object_Kankyo"
     compress
     include "$(BUILD_DIR)/src/overlays/actors/ovl_Object_Kankyo/z_object_kankyo.o"
