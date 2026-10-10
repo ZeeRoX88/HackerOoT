@@ -129,8 +129,7 @@ void ObjEnvcloud_Draw(Actor* thisx, PlayState* play) {
                         this->effects[i].base.y = 50.0f;
                     } */
                     this->effects[i].speed = Rand_ZeroOne() * 5.0f + 0.5f;
-                    this->effects[i].dirPhase.x = Rand_ZeroOne() * 360.0f;
-                    this->effects[i].dirPhase.z = Rand_ZeroOne() * 360.0f;
+                    this->effects[i].angle = i * 0x400;
                     this->effects[i].alpha = 0;
                     this->effects[i].state++;
                     break;
@@ -149,6 +148,8 @@ void ObjEnvcloud_Draw(Actor* thisx, PlayState* play) {
                     baseY = play->view.eye.y + viewForwards.y * 120.0f;
                     baseZ = play->view.eye.z + viewForwards.z * 120.0f;
 
+                    this->effects[i].angle += 0x100;
+
                     // movement
                     this->effects[i].pos.x += 0.5f; // sinf(0.05f); // direction
                     this->effects[i].pos.z += 0.5f; // cosf(0.05f); // direction
@@ -158,7 +159,7 @@ void ObjEnvcloud_Draw(Actor* thisx, PlayState* play) {
                     Vec3f test;
                     test.x = this->effects[i].pos.x + this->effects[i].base.x;
                     test.z = this->effects[i].pos.z + this->effects[i].base.z;
-                    if (Math_Vec3f_DistXZ(&test, &play->view.eye) <= 80.0f ||
+                    if (Math_Vec3f_DistXZ(&test, &play->view.eye) <= 60.0f ||
                         this->effects[i].base.x + this->effects[i].pos.x - baseX > maxDist ||
                         this->effects[i].base.x + this->effects[i].pos.x - baseX < -maxDist ||
                         this->effects[i].base.y + this->effects[i].pos.y - baseY > 50.0f ||
@@ -213,6 +214,8 @@ void ObjEnvcloud_Draw(Actor* thisx, PlayState* play) {
             Matrix_Translate(this->effects[i].base.x + this->effects[i].pos.x,
                              this->effects[i].base.y + this->effects[i].pos.y,
                              this->effects[i].base.z + this->effects[i].pos.z, MTXMODE_NEW);
+            Matrix_ReplaceRotation(&play->billboardMtxF);
+            Matrix_RotateZ(BINANG_TO_RAD(this->effects[i].angle), MTXMODE_APPLY);
             Matrix_Scale(1.5f, 1.5f, 1.5f, MTXMODE_APPLY);
             gDPPipeSync(POLY_XLU_DISP++);
 
@@ -226,10 +229,6 @@ void ObjEnvcloud_Draw(Actor* thisx, PlayState* play) {
             Gfx_SetupDL_61Xlu(play->state.gfxCtx);
             // gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD); // disable this for emulator
             gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
-
-            gSPMatrix(POLY_XLU_DISP++, &D_01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW); // billboard mtx
-
-            gDPPipeSync(POLY_XLU_DISP++);
 
             gSPDisplayList(POLY_XLU_DISP++, gEffDustDL);
 

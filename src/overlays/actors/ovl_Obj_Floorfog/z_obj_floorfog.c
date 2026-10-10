@@ -60,15 +60,15 @@ void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     this->actor.room = -1;
 
     if (!sIsSpawned) {
-        s32 bgId;
+        /* s32 bgId;
         Vec3f checkPos;
 
         checkPos.x = this->actor.world.pos.x;
         checkPos.y = this->actor.world.pos.y + 50.0f;
-        checkPos.z = this->actor.world.pos.z;
+        checkPos.z = this->actor.world.pos.z; */
 
-        this->actor.floorHeight =
-        BgCheck_EntityRaycastDown4(&play->colCtx, &this->actor.floorPoly, &bgId, &this->actor, &checkPos);
+        this->actor.floorHeight = this->actor.world.pos.y;
+        // BgCheck_EntityRaycastDown4(&play->colCtx, &this->actor.floorPoly, &bgId, &this->actor, &checkPos);
 
         for (i = 0; i < ARRAY_COUNT(this->effects); i++) {
             this->effects[i].state = 0;
@@ -104,6 +104,16 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
     if (!(play->cameraPtrs[CAM_ID_MAIN]->stateFlags & CAM_STATE_CAMERA_IN_WATER)) {
         OPEN_DISPS(play->state.gfxCtx, "../z_object_kankyo.c", 958);
 
+        POLY_XLU_DISP = Gfx_SetupDL(POLY_XLU_DISP, SETUPDL_0);
+        gDPSetCombineLERP(POLY_XLU_DISP++, PRIMITIVE, ENVIRONMENT, TEXEL0, ENVIRONMENT, PRIMITIVE, 0, TEXEL0, 0,
+                          COMBINED, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED);
+        gDPSetRenderMode(POLY_XLU_DISP++, G_RM_FOG_SHADE_A, G_RM_ZB_CLD_SURF2);
+        gSPSetGeometryMode(POLY_XLU_DISP++, G_FOG | G_LIGHTING);
+
+        // gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD); // disable this for emulator
+        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_NONE); // set this for emulator
+        gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
+
         for (i = 0; i < FLOORFOG_EFFECT_MAX; i++) {
             switch (this->effects[i].state) {
                 s16 randAngle;
@@ -122,6 +132,7 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
 
                     this->effects[i].alpha = 255;
                     this->effects[i].scale = Rand_ZeroOne() + 1.5f;
+                    this->effects[i].angle = i * 0x400;
 
                     this->effects[i].state++;
                     break;
@@ -129,17 +140,19 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                     this->effects[i].pos.x += (Math_SinS(this->actor.world.rot.y) * 0.5f);
                     this->effects[i].pos.z += (Math_CosS(this->actor.world.rot.y) * 0.5f);
 
+                    // when out of boundary area
                     if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) > EFFECT_DIST_MAX) {
                         this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
                         if (this->effects[i].alpha == 0) {
                             this->effects[i].state++;
                         }
                     } else {
+                        // player is close
                         if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
-                            this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 50, 0);
-                        } else {
-                            test = (u8)(127.0f * Math_SinS((play->gameplayFrames + (s16)this->effects[i].pos.x) * 0x200) + 127.0f);
-                            this->effects[i].alpha = CLAMP(this->effects[i].alpha + 10, 0, test);
+                            this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
+                        } else { // regular alpha oscillating
+                            test = (u8)(50.0f * Math_SinS((play->gameplayFrames + (s16)this->effects[i].pos.x) * 0x200) + 50.0f);
+                            this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, test);
                         }
                     }
                     break;
@@ -158,6 +171,7 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                              this->effects[i].pos.y,
                              this->effects[i].pos.z, MTXMODE_NEW);
             Matrix_RotateX(BINANG_TO_RAD(-0x4000), MTXMODE_APPLY);
+            Matrix_RotateZ(BINANG_TO_RAD(this->effects[i].angle), MTXMODE_APPLY);
             Matrix_Scale(this->effects[i].scale, this->effects[i].scale, this->effects[i].scale, MTXMODE_APPLY);
             gDPPipeSync(POLY_XLU_DISP++);
 
@@ -167,10 +181,6 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
             MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx, "../z_object_kankyo.c", 1107);
 
             gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(gDust5Tex));
-
-            Gfx_SetupDL_61Xlu(play->state.gfxCtx);
-            gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD); // disable this for emulator
-            // gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
 
             // gSPMatrix(POLY_XLU_DISP++, &D_01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW); // billboard mtx
 

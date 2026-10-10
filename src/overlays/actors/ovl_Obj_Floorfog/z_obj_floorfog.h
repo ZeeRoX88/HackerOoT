@@ -15,6 +15,7 @@ typedef struct ObjFloorfogEffect {
     /* 0x04 */ Vec3f pos;
     /* 0x40 */ u8 alpha;
                f32 scale;
+               s16 angle;
 } ObjFloorfogEffect; // size = 0x54
 
 typedef struct ObjFloorfog {
