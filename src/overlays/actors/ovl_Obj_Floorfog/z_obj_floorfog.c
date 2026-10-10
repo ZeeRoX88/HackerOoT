@@ -124,7 +124,7 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
 
                 case 0: // init
                     randAngle = (s16)(Rand_Next() >> 16); // fastest way to calculate random binary angle, Thar0
-                    randDist = (s16)(EFFECT_DIST_MAX * sqrtf(Rand_ZeroOne()));
+                    randDist = (s16)(EFFECT_DIST_MAX * sqrtf(Rand_ZeroOne())); // squareroot distributes more uniformly
 
                     this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(randAngle) * randDist);
                     this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
@@ -151,7 +151,7 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                         if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
                             this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
                         } else { // regular alpha oscillating
-                            test = (u8)(50.0f * Math_SinS((play->gameplayFrames + (s16)this->effects[i].pos.x) * 0x200) + 50.0f);
+                            test = (u8)(80.0f * Math_SinS((play->gameplayFrames + (s16)this->effects[i].pos.x) * 0x200) + 80.0f);
                             this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, test);
                         }
                     }
