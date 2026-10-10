@@ -104,19 +104,18 @@ void ObjOshihiki_SpawnDust(ObjOshihiki* this, PlayState* play) {
     Vec3f dustPos;
     static Vec3f dustAcc[] = { 0.0f, 0.0f, 0.0f };
     static Vec3f dustVel[] = { 0.0f, 0.5f, 0.0f };
+    static Color_RGBA8 dustPrim = { 170, 130, 90, 0 };
+    static Color_RGBA8 dustEnv = { 100, 60, 20, 0 };
     f32 dist = 425.0f * sScales[PARAMS_GET_U(this->dyna.actor.params, 0, 4)];
+    s16 angle;
 
-    dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y - 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
-    dustPos.y = this->dyna.actor.floorHeight;
-    dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y - 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
-
-    func_800287AC(play, &dustPos, dustVel, dustAcc, 150, 15, 20);
-
-    dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y + 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
-    dustPos.y = this->dyna.actor.floorHeight;
-    dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y + 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
-
-    func_800287AC(play, &dustPos, dustVel, dustAcc, 150, 15, 20);
+    for (u8 i = 0; i < 2; i++) {
+        angle = -0x2000 + (i * 0x4000);
+        dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y - angle) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+        dustPos.y = this->dyna.actor.floorHeight;
+        dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y - angle) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+        func_8002843C(play, &dustPos, dustVel, dustAcc, &dustPrim, &dustEnv, 100, 25, 10);
+    }
 }
 
 void ObjOshihiki_InitDynapoly(ObjOshihiki* this, PlayState* play, CollisionHeader* collision, s32 moveFlag) {
