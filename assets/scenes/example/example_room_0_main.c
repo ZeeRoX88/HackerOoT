@@ -169,26 +169,26 @@ s16 example_room_0_header03_objectList[LENGTH_EXAMPLE_ROOM_0_HEADER03_OBJECTLIST
 ActorEntry example_room_0_header03_actorList[LENGTH_EXAMPLE_ROOM_0_HEADER03_ACTORLIST] = {
     // Flame
     {
-        /* Actor ID   */ ACTOR_EN_LIGHT,
+        /* Actor ID   */ ACTOR_OBJ_OSHIHIKI,
         /* Position   */ { -172, 0, -437 },
-        /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
-        /* Parameters */ (0x0008 | (((0x3F << 4) & 0x03F0)))
-    },
-
-    // Dungeon Switches
-    {
-        /* Actor ID   */ ACTOR_OBJ_FLOORFOG,
-        /* Position   */ { -308, 0, -437 },
         /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
         /* Parameters */ (0x0000)
     },
 
+    // Dungeon Switches
+    {
+        /* Actor ID   */ ACTOR_OBJ_OSHIHIKI,
+        /* Position   */ { -308, 0, -437 },
+        /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
+        /* Parameters */ (0x0001)
+    },
+
     // Torch
     {
-        /* Actor ID   */ ACTOR_OBJ_SYOKUDAI,
+        /* Actor ID   */ ACTOR_OBJ_OSHIHIKI,
         /* Position   */ { -400, 0, -437 },
         /* Rotation   */ { DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000), DEG_TO_BINANG(0.000) },
-        /* Parameters */ (0x2000 | ((0x1 & 0x003F)))
+        /* Parameters */ (0x0002)
     },
 };
 

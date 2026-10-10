@@ -104,16 +104,17 @@ void ObjOshihiki_SpawnDust(ObjOshihiki* this, PlayState* play) {
     Vec3f dustPos;
     static Vec3f dustAcc[] = { 0.0f, 0.0f, 0.0f };
     static Vec3f dustVel[] = { 0.0f, 0.5f, 0.0f };
+    f32 dist = 425.0f * sScales[PARAMS_GET_U(this->dyna.actor.params, 0, 4)];
 
-    dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y - 0x2000) * 85.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+    dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y - 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
     dustPos.y = this->dyna.actor.floorHeight;
-    dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y - 0x2000) * 85.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+    dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y - 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
 
     func_800287AC(play, &dustPos, dustVel, dustAcc, 150, 15, 20);
 
-    dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y + 0x2000) * 85.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+    dustPos.x = this->dyna.actor.world.pos.x + (Math_SinS(this->dyna.actor.world.rot.y + 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
     dustPos.y = this->dyna.actor.floorHeight;
-    dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y + 0x2000) * 85.0f * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
+    dustPos.z = this->dyna.actor.world.pos.z + (Math_CosS(this->dyna.actor.world.rot.y + 0x2000) * dist * ((this->direction >= 0.0f) ? -1.0f : 1.0f));
 
     func_800287AC(play, &dustPos, dustVel, dustAcc, 150, 15, 20);
 }
