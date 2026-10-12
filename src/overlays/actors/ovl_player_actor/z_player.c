@@ -8101,6 +8101,8 @@ void Player_Action_80840450(Player* this, PlayState* play) {
         func_808401B0(play, this);
     }
 
+    Player_DecelerateToZero(this); // thineDave removed this, which action is this?
+
     if (!Player_TryActionHandlerList(play, this, sActionHandlerList1, true)) {
         if (!Player_UpdateHostileLockOn(this) &&
             (!Player_FriendlyLockOnOrParallel(this) || (func_80834B5C != this->upperActionFunc))) {
@@ -8166,6 +8168,8 @@ void Player_Action_808407CC(Player* this, PlayState* play) {
         Player_AnimPlayOnce(play, this, Player_GetIdleAnim(this));
     }
 
+    Player_DecelerateToZero(this); // thineDave removed this, which action?
+
     if (!Player_TryActionHandlerList(play, this, sActionHandlerList2, true)) {
         if (Player_UpdateHostileLockOn(this)) {
             func_8083CEAC(this, play);
@@ -8215,8 +8219,8 @@ void Player_Action_808407CC(Player* this, PlayState* play) {
         if (temp3 > 800) {
             Player_SetupTurnInPlace(play, this, yawTarget);
         }
-    } else {
-        Player_DecelerateToZero(this);
+    /* } else {
+        Player_DecelerateToZero(this); */
     }
 }
 
@@ -8333,6 +8337,8 @@ void Player_Action_Idle(Player* this, PlayState* play) {
         }
     }
 
+    // Player_DecelerateToZero(this); // thineDave removed this, removes the speed stop after rolling
+
     if (this->av2.fallDamageStunTimer == 0) {
         if (!Player_TryActionHandlerList(play, this, sActionHandlerListIdle, true)) {
             if (Player_UpdateHostileLockOn(this)) {
@@ -8352,7 +8358,7 @@ void Player_Action_Idle(Player* this, PlayState* play) {
                 return;
             }
 
-            Player_DecelerateToZero(this);
+            Player_DecelerateToZero(this); // thineDave added this, for fall damage?
 
             yawDiff = yawTarget - this->actor.shape.rot.y;
 
@@ -9787,7 +9793,6 @@ void Player_Action_Roll(Player* this, PlayState* play) {
     s32 interruptResult;
     s32 animDone;
     DynaPolyActor* wallPolyActor;
-    s32 pad;
     f32 speedTarget;
     s16 yawTarget;
 
@@ -9814,7 +9819,7 @@ void Player_Action_Roll(Player* this, PlayState* play) {
             // Must have a speed of 7 or above to be able to bonk into something
             if (this->speedXZ >= 7.0f) {
                 if (((this->actor.bgCheckFlags & BGCHECKFLAG_PLAYER_WALL_INTERACT) &&
-                     (sWorldYawToTouchedWall < 0x2000)) ||
+                     (sWorldYawToTouchedWall < 0x2000)) || // maybe increase angle
                     ((this->cylinder.base.ocFlags1 & OC1_HIT) &&
                      (ocCollidedActor = this->cylinder.base.oc,
                       ((ocCollidedActor->id == ACTOR_EN_WOOD02) &&
@@ -9845,7 +9850,8 @@ void Player_Action_Roll(Player* this, PlayState* play) {
                 }
             }
 
-            if (!animDone || !Player_ActionHandler_7(this, play)) {
+            // if ((this->skelAnime.curFrame < 15.0f) || !Player_ActionHandler_7(this, play)) {
+            if (!animDone || !Player_ActionHandler_7(this, play)) { // 
                 if (this->skelAnime.curFrame >= 20.0f) {
                     func_8083A060(this, play);
 
@@ -9864,8 +9870,14 @@ void Player_Action_Roll(Player* this, PlayState* play) {
                     speedTarget = 3.0f;
                 }
 
-                func_8083DF68(this, speedTarget, yawTarget);
-
+                // bug: targeting during directional rolling fucks up player orientation
+                // solution: add condition that uses the shape.rot.y if the player is targeting
+                if (this->stateFlags1 & PLAYER_STATE1_Z_TARGETING) {
+                    func_8083DF68(this, speedTarget, this->actor.shape.rot.y); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
+                } else {
+                    func_8083DF68(this, speedTarget, yawTarget); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
+                }
+                
                 if (func_8084269C(play, this)) {
                     Actor_PlaySfx_Flagged2(&this->actor, NA_SE_PL_ROLL_DUST - SFX_FLAG);
                 }
