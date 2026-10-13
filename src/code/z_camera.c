@@ -2331,9 +2331,6 @@ s32 Camera_Parallel1(Camera* camera) {
     camera->fov = Camera_LERPCeilF(roData->fovTarget, camera->fov, camera->fovUpdateRate, 1.0f);
     camera->roll = Camera_LERPCeilS(0, camera->roll, 0.5, 0xA);
     camera->atLERPStepScale = Camera_ClampLERPScale(camera, sp6A ? roData->unk_1C : roData->unk_14);
-
-    Debug_Print(0, "%d", rwData->animTimer);
-    Debug_Print_Draw(0, camera->play);
     //! @bug Missing return, but the return value is not used.
 }
 
