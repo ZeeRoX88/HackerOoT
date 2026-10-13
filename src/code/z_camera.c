@@ -2226,7 +2226,7 @@ s32 Camera_Parallel1(Camera* camera) {
             rwData->yawTarget = atToEyeNextDir.yaw;
         }
     } else {
-        if (roData->interfaceField & PARALLEL1_FLAG_5 || camera->player->stateFlags3 & PLAYER_STATE3_ROLLING) { // added condition for rolling
+        if (roData->interfaceField & PARALLEL1_FLAG_5/*  || camera->player->stateFlags3 & PLAYER_STATE3_ROLLING */) { // added condition for yaw update during rolling
             rwData->yawTarget = (s16)(playerPosRot->rot.y - 0x7FFF) + roData->yawTarget;
         }
         sCameraInterfaceField = roData->interfaceField;

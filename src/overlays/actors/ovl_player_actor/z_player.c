@@ -9872,16 +9872,15 @@ void Player_Action_Roll(Player* this, PlayState* play) {
                     speedTarget = 3.0f;
                 }
 
-                // bug: targeting during directional rolling fucks up player orientation
-                // solution: add condition that uses the shape.rot.y if the player is targeting
-                /* if (this->stateFlags1 & PLAYER_STATE1_Z_TARGETING) {
+                // add condition that uses the shape.rot.y if the player is targeting
+                if (this->stateFlags1 & PLAYER_STATE1_Z_TARGETING) {
                     func_8083DF68(this, speedTarget, this->actor.shape.rot.y); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
-                } else { */
+                } else {
                     // func_8083DF68(this, speedTarget, yawTarget); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
                     Math_AsymStepToF(&this->speedXZ, speedTarget, REG(19) / 100.0f, 1.5f);
-                    Math_ScaledStepToS(&this->yaw, yawTarget, 0x400);
-                    this->parallelYaw = this->yaw;
-                    /* } */
+                    Math_ScaledStepToS(&this->yaw, yawTarget, (this->currentBoots == PLAYER_BOOTS_IRON) ? 500 : 1024); // slower value, needs adjustment for iron boots
+                    // this->parallelYaw = this->yaw;
+                }
                 
                 if (func_8084269C(play, this)) {
                     Actor_PlaySfx_Flagged2(&this->actor, NA_SE_PL_ROLL_DUST - SFX_FLAG);
