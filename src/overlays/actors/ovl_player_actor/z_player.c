@@ -9797,6 +9797,7 @@ void Player_Action_Roll(Player* this, PlayState* play) {
     s16 yawTarget;
 
     this->stateFlags2 |= PLAYER_STATE2_5;
+    this->stateFlags3 |= PLAYER_STATE3_ROLLING;
 
     ocCollidedActor = NULL;
     animDone = LinkAnimation_Update(play, &this->skelAnime);
@@ -9824,7 +9825,7 @@ void Player_Action_Roll(Player* this, PlayState* play) {
                      (ocCollidedActor = this->cylinder.base.oc,
                       ((ocCollidedActor->id == ACTOR_EN_WOOD02) &&
                        (ABS((s16)(this->actor.world.rot.y - ocCollidedActor->yawTowardsPlayer)) > 0x6000))))) {
-                    if (ocCollidedActor != NULL) {
+                    if (ocCollidedActor != NULL) { // you could add some logic for pots and grass here
                         // The EN_WOOD02 actor uses home y rotation as a flag to signal that it has been
                         // bonked into and should try to spawn a drop.
                         ocCollidedActor->home.rot.y = 1;
@@ -9852,8 +9853,9 @@ void Player_Action_Roll(Player* this, PlayState* play) {
 
             // if ((this->skelAnime.curFrame < 15.0f) || !Player_ActionHandler_7(this, play)) {
             if (!animDone || !Player_ActionHandler_7(this, play)) { // 
-                if (this->skelAnime.curFrame >= 20.0f) {
+                if (this->skelAnime.curFrame >= 20.0f) { // rolling done
                     func_8083A060(this, play);
+                    this->stateFlags3 &= ~PLAYER_STATE3_ROLLING;
 
                     return;
                 }
@@ -9872,11 +9874,14 @@ void Player_Action_Roll(Player* this, PlayState* play) {
 
                 // bug: targeting during directional rolling fucks up player orientation
                 // solution: add condition that uses the shape.rot.y if the player is targeting
-                if (this->stateFlags1 & PLAYER_STATE1_Z_TARGETING) {
+                /* if (this->stateFlags1 & PLAYER_STATE1_Z_TARGETING) {
                     func_8083DF68(this, speedTarget, this->actor.shape.rot.y); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
-                } else {
-                    func_8083DF68(this, speedTarget, yawTarget); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
-                }
+                } else { */
+                    // func_8083DF68(this, speedTarget, yawTarget); // thineDave changed arg2 from this->actor.shape.rot.y to yawTarget
+                    Math_AsymStepToF(&this->speedXZ, speedTarget, REG(19) / 100.0f, 1.5f);
+                    Math_ScaledStepToS(&this->yaw, yawTarget, 0x400);
+                    this->parallelYaw = this->yaw;
+                    /* } */
                 
                 if (func_8084269C(play, this)) {
                     Actor_PlaySfx_Flagged2(&this->actor, NA_SE_PL_ROLL_DUST - SFX_FLAG);

@@ -2226,7 +2226,7 @@ s32 Camera_Parallel1(Camera* camera) {
             rwData->yawTarget = atToEyeNextDir.yaw;
         }
     } else {
-        if (roData->interfaceField & PARALLEL1_FLAG_5) {
+        if (roData->interfaceField & PARALLEL1_FLAG_5 || camera->player->stateFlags3 & PLAYER_STATE3_ROLLING) { // added condition for rolling
             rwData->yawTarget = (s16)(playerPosRot->rot.y - 0x7FFF) + roData->yawTarget;
         }
         sCameraInterfaceField = roData->interfaceField;
@@ -2331,6 +2331,9 @@ s32 Camera_Parallel1(Camera* camera) {
     camera->fov = Camera_LERPCeilF(roData->fovTarget, camera->fov, camera->fovUpdateRate, 1.0f);
     camera->roll = Camera_LERPCeilS(0, camera->roll, 0.5, 0xA);
     camera->atLERPStepScale = Camera_ClampLERPScale(camera, sp6A ? roData->unk_1C : roData->unk_14);
+
+    Debug_Print(0, "%d", rwData->animTimer);
+    Debug_Print_Draw(0, camera->play);
     //! @bug Missing return, but the return value is not used.
 }
 
