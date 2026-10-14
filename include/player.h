@@ -780,13 +780,15 @@ typedef struct WeaponInfo {
 #define PLAYER_STATE3_5 (1 << 5)
 #define PLAYER_STATE3_RESTORE_NAYRUS_LOVE (1 << 6) // Set by ocarina effects actors when destroyed to signal Nayru's Love may be restored (see `ACTOROVL_ALLOC_ABSOLUTE`)
 #define PLAYER_STATE3_FLYING_WITH_HOOKSHOT (1 << 7) // Flying in the air with the hookshot as it pulls Player toward its destination
-#define PLAYER_STATE3_ROLLING (1 << 8)
 
 #if ENABLE_CUTSCENE_IMPROVEMENTS
 #define PLAYER_STATE3_CS_HALT (1 << 8) // Prevents updating the actor while a cutscene is playing
 #else
 #define PLAYER_STATE3_CS_HALT (0)
 #endif
+
+#define PLAYER_STATE3_ROLLING (1 << 9)
+#define PLAYER_STATE3_DASH (1 << 10)
 
 #define PLAYER_ALLOC_GI_MIN 0x2880 // title card maximum file size
 

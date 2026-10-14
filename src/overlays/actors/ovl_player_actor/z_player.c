@@ -8832,6 +8832,10 @@ void Player_Action_80842180(Player* this, PlayState* play) {
     this->stateFlags2 |= PLAYER_STATE2_5;
     func_80841EE4(this, play);
 
+    if ((this->stateFlags3 & PLAYER_STATE3_DASH) && !CHECK_BTN_ANY(sControlInput->cur.button, BTN_A )) {
+        this->stateFlags3 &= ~PLAYER_STATE3_DASH;
+    }
+
     if (!Player_TryActionHandlerList(play, this, sActionHandlerList8, true)) {
         if (Player_IsZTargetingWithHostileUpdate(this)) {
             func_8083C858(this, play);
@@ -8840,7 +8844,8 @@ void Player_Action_80842180(Player* this, PlayState* play) {
 
         Player_GetMovementSpeedAndYaw(this, &speedTarget, &yawTarget, SPEED_MODE_CURVED, play);
 
-        if (MM_BUNNY_HOOD && this->currentMask == PLAYER_MASK_BUNNY) {
+        if ((MM_BUNNY_HOOD && this->currentMask == PLAYER_MASK_BUNNY) ||
+            (this->stateFlags3 & PLAYER_STATE3_DASH)) {
             speedTarget *= MM_BUNNY_HOOD_SPEED;
         }
 
@@ -9857,6 +9862,9 @@ void Player_Action_Roll(Player* this, PlayState* play) {
                     func_8083A060(this, play);
                     this->stateFlags3 &= ~PLAYER_STATE3_ROLLING;
 
+                    if (CHECK_BTN_ANY(sControlInput->cur.button, BTN_A )) {
+                        this->stateFlags3 |= PLAYER_STATE3_DASH;
+                    }
                     return;
                 }
 

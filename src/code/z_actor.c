@@ -240,7 +240,7 @@ void ActorShadow_DrawFeet(Actor* actor, Lights* lights, PlayState* play) {
                                 EffFootmark_Add(play, &spFC, actor, i, feetPosPtr, (actor->shape.shadowScale * 0.3f),
                                                 0, 0, 0, player->wetTimer << 7, 200, 0);
                             }
-                            if ((LINK_IS_CHILD && actor->speed > 5.4f && actor->speed < 5.6f) || (actor->speed > 5.9f && actor->speed < 6.1f)) {
+                            if (((LINK_IS_CHILD && actor->speed > 5.4f) || (actor->speed > 5.9f)) && !(player->stateFlags3 & PLAYER_STATE3_ROLLING)) {
                                 Vec3f velocity = { 0.0f, 1.0f, 0.0f };
                                 Vec3f accel = { 0.0f, 0.0f, 0.0f };
 
