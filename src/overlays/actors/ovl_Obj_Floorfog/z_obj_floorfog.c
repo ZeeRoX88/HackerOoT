@@ -124,6 +124,8 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
             switch (this->effects[i].state) {
                 // s16 randAngle;
                 // s16 randDist;
+                f32 r;
+                f32 theta;
                 s16 effectRot;
                 s16 diff;
                 u8 test;
@@ -137,8 +139,8 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                     this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(randAngle) * randDist); */
 
                     // sunflower algorithm for uniform positions
-                    f32 r = EFFECT_DIST_MAX * sqrtf((f32)i / (f32)(EFFECT_COUNT_MAX - 1));
-                    f32 theta = i * goldenAngle;
+                    r = EFFECT_DIST_MAX * sqrtf((f32)i / (f32)(EFFECT_COUNT_MAX - 1));
+                    theta = i * goldenAngle;
                     this->effects[i].pos.x = this->actor.world.pos.x + (r * cosf(theta));
                     this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
                     this->effects[i].pos.z = this->actor.world.pos.z + (r * sinf(theta));
