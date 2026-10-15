@@ -14,6 +14,7 @@
 #include "sequence.h"
 #include "sfx.h"
 #include "sys_math3d.h"
+#include "sys_math.h"
 #include "sys_matrix.h"
 #include "z_lib.h"
 #include "audio.h"
@@ -96,12 +97,17 @@ void ObjFloorfog_Update(Actor* thisx, PlayState* play) {
 
 #define EFFECT_DIST_MAX 250.0f
 
+#define EFFECT_COUNT_MAX 70
+
 void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
     Player* player = GET_PLAYER(play);
-    u8 i;
 
     if (!(play->cameraPtrs[CAM_ID_MAIN]->stateFlags & CAM_STATE_CAMERA_IN_WATER)) {
+        f32 phi = 1.618f; // (sqrtf(5.0f) + 1.0f) / 2.0f;
+        f32 goldenAngle = 2.0f * M_PI / Math_PowF(phi, 2); // 2.3999f
+        u8 i;
+
         OPEN_DISPS(play->state.gfxCtx, "../z_object_kankyo.c", 958);
 
         POLY_XLU_DISP = Gfx_SetupDL(POLY_XLU_DISP, SETUPDL_0);
@@ -114,24 +120,31 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
         gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_NONE); // set this for emulator
         gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
 
-        for (i = 0; i < FLOORFOG_EFFECT_MAX; i++) {
+        for (i = 0; i < EFFECT_COUNT_MAX; i++) {
             switch (this->effects[i].state) {
-                s16 randAngle;
-                s16 randDist;
+                // s16 randAngle;
+                // s16 randDist;
                 s16 effectRot;
                 s16 diff;
                 u8 test;
 
                 case 0: // init
-                    randAngle = (s16)(Rand_Next() >> 16); // fastest way to calculate random binary angle, Thar0
+                    /* randAngle = (s16)(Rand_Next() >> 16); // fastest way to calculate random binary angle, Thar0
                     randDist = (s16)(EFFECT_DIST_MAX * sqrtf(Rand_ZeroOne())); // squareroot distributes more uniformly
 
                     this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(randAngle) * randDist);
                     this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
-                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(randAngle) * randDist);
+                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(randAngle) * randDist); */
+
+                    // sunflower algorithm for uniform positions
+                    f32 r = EFFECT_DIST_MAX * sqrtf((f32)i / (f32)(EFFECT_COUNT_MAX - 1));
+                    f32 theta = i * goldenAngle;
+                    this->effects[i].pos.x = this->actor.world.pos.x + (r * cosf(theta));
+                    this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
+                    this->effects[i].pos.z = this->actor.world.pos.z + (r * sinf(theta));
 
                     this->effects[i].alpha = 255;
-                    this->effects[i].scale = Rand_ZeroOne() + 1.5f;
+                    this->effects[i].scale = Rand_ZeroOne() + 2.0f;
                     this->effects[i].angle = i * 0x400;
 
                     this->effects[i].state++;
@@ -140,8 +153,10 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                     this->effects[i].pos.x += (Math_SinS(this->actor.world.rot.y) * 0.5f);
                     this->effects[i].pos.z += (Math_CosS(this->actor.world.rot.y) * 0.5f);
 
+                    this->effects[i].angle += 0x100;
+
                     // when out of boundary area
-                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) > EFFECT_DIST_MAX) {
+                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) > (EFFECT_DIST_MAX + 5.0f)) {
                         this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
                         if (this->effects[i].alpha == 0) {
                             this->effects[i].state++;
@@ -149,9 +164,9 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                     } else {
                         // player is close
                         if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
-                            this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
+                            this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 20, 0);
                         } else { // regular alpha oscillating
-                            test = (u8)(80.0f * Math_SinS((play->gameplayFrames + (s16)this->effects[i].pos.x) * 0x200) + 80.0f);
+                            test = (u8)(100.0f * Math_SinS((play->gameplayFrames - /* RAD_TO_BINANG */(s16)this->effects[i].pos.x) * 0x200) + 100.0f);
                             this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, test);
                         }
                     }
