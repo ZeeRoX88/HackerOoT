@@ -21,6 +21,7 @@
 #include "play_state.h"
 #include "player.h"
 #include "save.h"
+#include "attributes.h"
 
 #include "assets/objects/gameplay_keep/gameplay_keep.h"
 
@@ -121,23 +122,19 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
         gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
 
         for (i = 0; i < EFFECT_COUNT_MAX; i++) {
+            this->effects[i].pos.x += (Math_SinS(this->actor.world.rot.y) * 0.5f);
+            this->effects[i].pos.z += (Math_CosS(this->actor.world.rot.y) * 0.5f);
+            this->effects[i].angle += 0x100;
+
             switch (this->effects[i].state) {
-                // s16 randAngle;
-                // s16 randDist;
                 f32 r;
                 f32 theta;
                 s16 effectRot;
                 s16 diff;
                 u8 test;
+                f32 dist;
 
                 case 0: // init
-                    /* randAngle = (s16)(Rand_Next() >> 16); // fastest way to calculate random binary angle, Thar0
-                    randDist = (s16)(EFFECT_DIST_MAX * sqrtf(Rand_ZeroOne())); // squareroot distributes more uniformly
-
-                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(randAngle) * randDist);
-                    this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
-                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(randAngle) * randDist); */
-
                     // sunflower algorithm for uniform positions
                     r = EFFECT_DIST_MAX * sqrtf((f32)i / (f32)(EFFECT_COUNT_MAX - 1));
                     theta = i * goldenAngle;
@@ -145,20 +142,28 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                     this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
                     this->effects[i].pos.z = this->actor.world.pos.z + (r * sinf(theta));
 
-                    this->effects[i].alpha = 255;
+                    // this->effects[i].alpha = 255;
                     this->effects[i].scale = Rand_ZeroOne() + 2.0f;
                     this->effects[i].angle = i * 0x400;
 
                     this->effects[i].state++;
                     break;
-                case 1: // moving
-                    this->effects[i].pos.x += (Math_SinS(this->actor.world.rot.y) * 0.5f);
-                    this->effects[i].pos.z += (Math_CosS(this->actor.world.rot.y) * 0.5f);
-
-                    this->effects[i].angle += 0x100;
-
+                case 2: // reset location
+                    dist = Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos);
+                    effectRot = Math_Vec3f_Yaw(&this->actor.world.pos, &this->effects[i].pos);
+                    diff = this->actor.world.rot.y - effectRot;
+                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(this->actor.world.rot.y + 0x8000 + diff) * dist);
+                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(this->actor.world.rot.y + 0x8000 + diff) * dist);
+                    this->effects[i].state = 3;
+                    break;
+                case 3: // reappearing outside max distance
+                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) < EFFECT_DIST_MAX) {
+                        this->effects[i].state = 1;
+                    }
+                    break;
+                case 1: // inside max distance, regular movement and alpha
                     // when out of boundary area
-                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) > (EFFECT_DIST_MAX + 5.0f)) {
+                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) >= EFFECT_DIST_MAX) {
                         this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
                         if (this->effects[i].alpha == 0) {
                             this->effects[i].state++;
@@ -168,17 +173,10 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                         if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
                             this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 20, 0);
                         } else { // regular alpha oscillating
-                            test = (u8)(100.0f * Math_SinS((play->gameplayFrames - /* RAD_TO_BINANG */(s16)this->effects[i].pos.x) * 0x200) + 100.0f);
+                            test = (u8)(100.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 100.0f);
                             this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, test);
                         }
                     }
-                    break;
-                case 2: // reset location
-                    effectRot = Math_Vec3f_Yaw(&this->actor.world.pos, &this->effects[i].pos);
-                    diff = this->actor.world.rot.y - effectRot;
-                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(this->actor.world.rot.y + 0x8000 + diff) * 250.0f);
-                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(this->actor.world.rot.y + 0x8000 + diff) * 250.0f);
-                    this->effects[i].state = 1;
                     break;
                 default:
                     break;
