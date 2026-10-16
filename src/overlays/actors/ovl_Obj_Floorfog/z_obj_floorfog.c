@@ -32,11 +32,6 @@ void ObjFloorfog_Destroy(Actor* thisx, PlayState* play);
 void ObjFloorfog_Update(Actor* thisx, PlayState* play);
 void ObjFloorfog_Draw(Actor* thisx, PlayState* play);
 
-void ObjFloorfog_SetupAction(ObjFloorfog* this, ObjFloorfogActionFunc action);
-void ObjFloorfog_Snow(ObjFloorfog* this, PlayState* play);
-
-void ObjFloorfog_DrawClouds(Actor* thisx, PlayState* play);
-
 ActorProfile Obj_Floorfog_Profile = {
     /**/ ACTOR_OBJ_FLOORFOG,
     /**/ ACTORCAT_ITEMACTION,
@@ -50,10 +45,6 @@ ActorProfile Obj_Floorfog_Profile = {
 };
 
 static u8 sIsSpawned = false;
-
-void ObjFloorfog_SetupAction(ObjFloorfog* this, ObjFloorfogActionFunc action) {
-    this->actionFunc = action;
-}
 
 void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
@@ -76,7 +67,6 @@ void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
             this->effects[i].state = 0;
         }
 
-        ObjFloorfog_SetupAction(this, ObjFloorfog_Snow);
         sIsSpawned = true;
     } else {
         Actor_Kill(&this->actor);
@@ -87,17 +77,11 @@ void ObjFloorfog_Destroy(Actor* thisx, PlayState* play) {
     Actor_Kill(thisx);
 }
 
-void ObjFloorfog_Snow(ObjFloorfog* this, PlayState* play) {
-}
-
 void ObjFloorfog_Update(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
-
-    this->actionFunc(this, play);
 }
 
 #define EFFECT_DIST_MAX 250.0f
-
 #define EFFECT_COUNT_MAX 70
 
 void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
@@ -129,10 +113,10 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
             switch (this->effects[i].state) {
                 f32 r;
                 f32 theta;
+                f32 dist;
                 s16 effectRot;
                 s16 diff;
                 u8 test;
-                f32 dist;
 
                 case 0: // init
                     // sunflower algorithm for uniform positions

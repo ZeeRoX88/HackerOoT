@@ -8,20 +8,17 @@
 
 struct ObjFloorfog;
 
-typedef void (*ObjFloorfogActionFunc)(struct ObjFloorfog*, struct PlayState*);
-
 typedef struct ObjFloorfogEffect {
     /* 0x00 */ u8 state;
     /* 0x04 */ Vec3f pos;
     /* 0x40 */ u8 alpha;
                f32 scale;
                s16 angle;
-} ObjFloorfogEffect; // size = 0x54
+} ObjFloorfogEffect;
 
 typedef struct ObjFloorfog {
     /* 0x0000 */ Actor actor;
     /* 0x014C */ ObjFloorfogEffect effects[FLOORFOG_EFFECT_MAX];
-    /* 0x165C */ ObjFloorfogActionFunc actionFunc;
-} ObjFloorfog; // size = 0x1660
+} ObjFloorfog;
 
 #endif
