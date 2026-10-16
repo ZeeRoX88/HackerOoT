@@ -44,33 +44,13 @@ ActorProfile Obj_Floorfog_Profile = {
     /**/ ObjFloorfog_Draw,
 };
 
-static u8 sIsSpawned = false;
-
 void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
-    s16 i;
 
-    this->actor.room = -1;
+    this->effectPrimColor.r = this->effectPrimColor.g = this->effectPrimColor.b = 200;
+    this->effectEnvColor.r = this->effectPrimColor.g = this->effectPrimColor.b = 200;
 
-    if (!sIsSpawned) {
-        /* s32 bgId;
-        Vec3f checkPos;
-
-        checkPos.x = this->actor.world.pos.x;
-        checkPos.y = this->actor.world.pos.y + 50.0f;
-        checkPos.z = this->actor.world.pos.z; */
-
-        this->actor.floorHeight = this->actor.world.pos.y;
-        // BgCheck_EntityRaycastDown4(&play->colCtx, &this->actor.floorPoly, &bgId, &this->actor, &checkPos);
-
-        for (i = 0; i < ARRAY_COUNT(this->effects); i++) {
-            this->effects[i].state = 0;
-        }
-
-        sIsSpawned = true;
-    } else {
-        Actor_Kill(&this->actor);
-    }
+    // add params for individual radii
 }
 
 void ObjFloorfog_Destroy(Actor* thisx, PlayState* play) {
@@ -82,7 +62,7 @@ void ObjFloorfog_Update(Actor* thisx, PlayState* play) {
 }
 
 #define EFFECT_DIST_MAX 250.0f
-#define EFFECT_COUNT_MAX 70
+#define EFFECT_COUNT_MAX 70 // for testing
 
 void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
@@ -116,21 +96,20 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                 f32 dist;
                 s16 effectRot;
                 s16 diff;
-                u8 test;
+                u8 sineAlpha;
 
                 case 0: // init
                     // sunflower algorithm for uniform positions
                     r = EFFECT_DIST_MAX * sqrtf((f32)i / (f32)(EFFECT_COUNT_MAX - 1));
                     theta = i * goldenAngle;
                     this->effects[i].pos.x = this->actor.world.pos.x + (r * cosf(theta));
-                    this->effects[i].pos.y = this->actor.floorHeight + 10.0f;
+                    this->effects[i].pos.y = this->actor.world.pos.y + 10.0f;
                     this->effects[i].pos.z = this->actor.world.pos.z + (r * sinf(theta));
 
-                    // this->effects[i].alpha = 255;
                     this->effects[i].scale = Rand_ZeroOne() + 2.0f;
                     this->effects[i].angle = i * 0x400;
 
-                    this->effects[i].state++;
+                    this->effects[i].state = 1;
                     break;
                 case 2: // reset location
                     dist = Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos);
@@ -150,19 +129,17 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                     if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) >= EFFECT_DIST_MAX) {
                         this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
                         if (this->effects[i].alpha == 0) {
-                            this->effects[i].state++;
+                            this->effects[i].state = 2;
                         }
                     } else {
                         // player is close
                         if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
                             this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 20, 0);
                         } else { // regular alpha oscillating
-                            test = (u8)(100.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 100.0f);
-                            this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, test);
+                            sineAlpha = (u8)(100.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 100.0f);
+                            this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, sineAlpha);
                         }
                     }
-                    break;
-                default:
                     break;
             }
 
@@ -174,14 +151,12 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
             Matrix_Scale(this->effects[i].scale, this->effects[i].scale, this->effects[i].scale, MTXMODE_APPLY);
             gDPPipeSync(POLY_XLU_DISP++);
 
-            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 200, 200, 200, this->effects[i].alpha);
-            gDPSetEnvColor(POLY_XLU_DISP++, 200, 200, 200, this->effects[i].alpha);
+            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->effectPrimColor.r, this->effectPrimColor.g, this->effectPrimColor.b, this->effects[i].alpha);
+            gDPSetEnvColor(POLY_XLU_DISP++, this->effectEnvColor.r, this->effectEnvColor.g, this->effectEnvColor.b, this->effects[i].alpha);
 
             MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx, "../z_object_kankyo.c", 1107);
 
             gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(gDust5Tex));
-
-            // gSPMatrix(POLY_XLU_DISP++, &D_01000000, G_MTX_NOPUSH | G_MTX_MUL | G_MTX_MODELVIEW); // billboard mtx
 
             gDPPipeSync(POLY_XLU_DISP++);
 
