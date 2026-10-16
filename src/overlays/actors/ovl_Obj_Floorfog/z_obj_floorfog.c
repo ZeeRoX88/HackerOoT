@@ -48,7 +48,7 @@ void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
 
     this->effectPrimColor.r = this->effectPrimColor.g = this->effectPrimColor.b = 200;
-    this->effectEnvColor.r = this->effectPrimColor.g = this->effectPrimColor.b = 200;
+    this->effectEnvColor.r = this->effectEnvColor.g = this->effectEnvColor.b = 200;
 
     // add params for individual radii
 }
