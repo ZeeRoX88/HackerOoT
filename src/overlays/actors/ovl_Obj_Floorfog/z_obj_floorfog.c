@@ -136,7 +136,8 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                         if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
                             this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 20, 0);
                         } else { // regular alpha oscillating
-                            sineAlpha = (u8)(100.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 100.0f);
+                            // sineAlpha = (u8)(100.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 100.0f);
+                            sineAlpha = (u8)(100.0f * (Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + Math_CosS((play->gameplayFrames - (s16)this->effects[i].pos.z) * 0x200)) + 100.0f);
                             this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, sineAlpha);
                         }
                     }
