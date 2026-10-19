@@ -112,19 +112,6 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
 
                     this->effects[i].state = 1;
                     break;
-                case 2: // reset location
-                    dist = Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos);
-                    effectRot = Math_Vec3f_Yaw(&this->actor.world.pos, &this->effects[i].pos);
-                    diff = this->actor.world.rot.y - effectRot;
-                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(this->actor.world.rot.y + 0x8000 + diff) * dist);
-                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(this->actor.world.rot.y + 0x8000 + diff) * dist);
-                    this->effects[i].state = 3;
-                    break;
-                case 3: // reappearing outside max distance
-                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) < EFFECT_DIST_MAX) {
-                        this->effects[i].state = 1;
-                    }
-                    break;
                 case 1: // inside max distance, regular movement and alpha
                     // when out of boundary area
                     if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) >= EFFECT_DIST_MAX) {
@@ -141,6 +128,19 @@ void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
                             sineAlpha = (u8)(50.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 50.0f) + (50.0f * Math_CosS((play->gameplayFrames - (s16)this->effects[i].pos.z) * 0x200) + 50.0f);
                             this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, sineAlpha);
                         }
+                    }
+                    break;
+                case 2: // reset location
+                    dist = Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos);
+                    effectRot = Math_Vec3f_Yaw(&this->actor.world.pos, &this->effects[i].pos);
+                    diff = this->actor.world.rot.y - effectRot;
+                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(this->actor.world.rot.y + 0x8000 + diff) * dist);
+                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(this->actor.world.rot.y + 0x8000 + diff) * dist);
+                    this->effects[i].state = 3;
+                    break;
+                case 3: // reappearing outside max distance
+                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) < EFFECT_DIST_MAX) {
+                        this->effects[i].state = 1;
                     }
                     break;
             }
