@@ -11577,9 +11577,10 @@ void Player_UpdateCamAndSeqModes(PlayState* play, Player* this) {
                 Camera_SetViewParam(Play_GetCamera(play, CAM_ID_MAIN), CAM_VIEW_TARGET, this->actor.parent);
             } else if (Player_Action_8084377C == this->actionFunc) {
                 camMode = CAM_MODE_STILL;
-            } else if (this->stateFlags2 & PLAYER_STATE2_8) {
+            // push and pull parallel camera removed
+            } /* else if (this->stateFlags2 & PLAYER_STATE2_8) {
                 camMode = CAM_MODE_PUSH_PULL;
-            } else if ((focusActor = this->focusActor) != NULL) {
+            } */ else if ((focusActor = this->focusActor) != NULL) {
                 if (ACTOR_FLAGS_CHECK_ALL(&this->actor, ACTOR_FLAG_TALK)) {
                     camMode = CAM_MODE_TALK;
                 } else if (this->stateFlags1 & PLAYER_STATE1_FRIENDLY_ACTOR_FOCUS) {

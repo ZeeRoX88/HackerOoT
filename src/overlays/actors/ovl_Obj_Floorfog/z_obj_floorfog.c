@@ -51,7 +51,7 @@ void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     this->effectPrimColor.r = this->effectPrimColor.g = this->effectPrimColor.b = 200;
     this->effectEnvColor.r = this->effectEnvColor.g = this->effectEnvColor.b = 200;
 
-    // add params for individual radii
+    // add params for individual radii and for smaller variant, which can be easily used in different areas
 }
 
 void ObjFloorfog_Destroy(Actor* thisx, PlayState* play) {

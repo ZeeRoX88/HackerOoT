@@ -633,7 +633,7 @@ void Play_Init(GameState* thisx) {
         // Environment_DynamicWeather(this);
     }
 
-    // test spawn envcloud actor
+    // test spawn envcloud actor, definitely a performance penalty
     // Actor_Spawn(&this->actorCtx, this, ACTOR_OBJ_ENVCLOUD, 0, 0, 0, 0, 0, 0, 0);
 }
 
