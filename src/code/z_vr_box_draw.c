@@ -148,21 +148,10 @@ void Skybox_DrawNew(SkyboxContext* skyboxCtx, GraphicsContext* gfxCtx, LightCont
     Vtx* vtx;
     u8 i;
 
-    // vtx = Graph_Alloc(gfxCtx, sizeof(Vtx) * 37);
     vtx = skybox_cylinder_vertices;
 
     if (vtx != NULL) {
         for (i = 0; i < 37; i++) {
-            vtx[i].v.ob[0] = skybox_cylinder_vertices[i].v.ob[0];
-            vtx[i].v.ob[1] = skybox_cylinder_vertices[i].v.ob[1];
-            vtx[i].v.ob[2] = skybox_cylinder_vertices[i].v.ob[2];
-
-            vtx[i].v.flag = 0;
-            vtx[i].v.tc[0] = skybox_cylinder_vertices[i].v.tc[0];
-            vtx[i].v.tc[1] = skybox_cylinder_vertices[i].v.tc[1];
-
-            vtx[i].v.cn[3] = 255; // vertex color alpha
-
             switch (i) {
                 case 0:
                 case 3:
