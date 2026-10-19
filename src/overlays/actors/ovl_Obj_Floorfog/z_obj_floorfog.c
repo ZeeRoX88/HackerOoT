@@ -23,7 +23,7 @@
 #include "save.h"
 #include "attributes.h"
 
-#include "assets/objects/gameplay_keep/gameplay_keep.h"
+#include "assets/objects/gameplay_hacker_keep/gameplay_hacker_keep.h"
 
 #define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_DRAW_CULLING_DISABLED | ACTOR_FLAG_UPDATE_DURING_OCARINA)
 
@@ -47,10 +47,7 @@ ActorProfile Obj_Floorfog_Profile = {
 void ObjFloorfog_Init(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
 
-    this->effectPrimColor.r = this->effectPrimColor.g = this->effectPrimColor.b = 200;
-    this->effectEnvColor.r = this->effectEnvColor.g = this->effectEnvColor.b = 200;
-
-    // add params for individual radii
+    this->actor.world.pos.y += 50.0f;
 }
 
 void ObjFloorfog_Destroy(Actor* thisx, PlayState* play) {
@@ -61,110 +58,32 @@ void ObjFloorfog_Update(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
 }
 
-#define EFFECT_DIST_MAX 250.0f
-#define EFFECT_COUNT_MAX 70 // for testing
-
 void ObjFloorfog_Draw(Actor* thisx, PlayState* play) {
     ObjFloorfog* this = (ObjFloorfog*)thisx;
     Player* player = GET_PLAYER(play);
+    Vtx* vtx;
+    s16 i;
+    s32 gameplayFrames = play->gameplayFrames;
 
-    if (!(play->cameraPtrs[CAM_ID_MAIN]->stateFlags & CAM_STATE_CAMERA_IN_WATER)) {
-        f32 phi = 1.618f; // (sqrtf(5.0f) + 1.0f) / 2.0f;
-        f32 goldenAngle = 2.0f * M_PI / Math_PowF(phi, 2); // 2.3999f
-        u8 i;
+    vtx = SEGMENTED_TO_VIRTUAL(PlaneDL_PlaneDL_mesh_layer_Transparent_vtx_0);
 
-        OPEN_DISPS(play->state.gfxCtx, "../z_object_kankyo.c", 958);
-
-        POLY_XLU_DISP = Gfx_SetupDL(POLY_XLU_DISP, SETUPDL_0);
-        gDPSetCombineLERP(POLY_XLU_DISP++, PRIMITIVE, ENVIRONMENT, TEXEL0, ENVIRONMENT, PRIMITIVE, 0, TEXEL0, 0,
-                          COMBINED, 0, PRIMITIVE, 0, 0, 0, 0, COMBINED);
-        gDPSetRenderMode(POLY_XLU_DISP++, G_RM_FOG_SHADE_A, G_RM_ZB_CLD_SURF2);
-        gSPSetGeometryMode(POLY_XLU_DISP++, G_FOG | G_LIGHTING);
-
-        // gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_THRESHOLD); // disable this for emulator
-        gDPSetAlphaCompare(POLY_XLU_DISP++, G_AC_NONE); // set this for emulator
-        gDPSetAlphaDither(POLY_XLU_DISP++, G_AD_DISABLE); // set this for emulator
-
-        for (i = 0; i < EFFECT_COUNT_MAX; i++) {
-            this->effects[i].pos.x += (Math_SinS(this->actor.world.rot.y) * 0.5f);
-            this->effects[i].pos.z += (Math_CosS(this->actor.world.rot.y) * 0.5f);
-            this->effects[i].angle += 0x100;
-
-            switch (this->effects[i].state) {
-                f32 r;
-                f32 theta;
-                f32 dist;
-                s16 effectRot;
-                s16 diff;
-                u8 sineAlpha;
-
-                case 0: // init
-                    // sunflower algorithm for uniform positions
-                    r = EFFECT_DIST_MAX * sqrtf((f32)i / (f32)(EFFECT_COUNT_MAX - 1));
-                    theta = i * goldenAngle;
-                    this->effects[i].pos.x = this->actor.world.pos.x + (r * cosf(theta));
-                    this->effects[i].pos.y = this->actor.world.pos.y + 10.0f;
-                    this->effects[i].pos.z = this->actor.world.pos.z + (r * sinf(theta));
-
-                    this->effects[i].scale = Rand_ZeroOne() + 2.0f;
-                    this->effects[i].angle = i * 0x400;
-
-                    this->effects[i].state = 1;
-                    break;
-                case 2: // reset location
-                    dist = Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos);
-                    effectRot = Math_Vec3f_Yaw(&this->actor.world.pos, &this->effects[i].pos);
-                    diff = this->actor.world.rot.y - effectRot;
-                    this->effects[i].pos.x = this->actor.world.pos.x + (Math_SinS(this->actor.world.rot.y + 0x8000 + diff) * dist);
-                    this->effects[i].pos.z = this->actor.world.pos.z + (Math_CosS(this->actor.world.rot.y + 0x8000 + diff) * dist);
-                    this->effects[i].state = 3;
-                    break;
-                case 3: // reappearing outside max distance
-                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) < EFFECT_DIST_MAX) {
-                        this->effects[i].state = 1;
-                    }
-                    break;
-                case 1: // inside max distance, regular movement and alpha
-                    // when out of boundary area
-                    if (Math_Vec3f_DistXZ(&this->effects[i].pos, &this->actor.world.pos) >= EFFECT_DIST_MAX) {
-                        this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 10, 0);
-                        if (this->effects[i].alpha == 0) {
-                            this->effects[i].state = 2;
-                        }
-                    } else {
-                        // player is close
-                        if (Math_Vec3f_DistXZ(&this->effects[i].pos, &player->actor.world.pos) < 35.0f) {
-                            this->effects[i].alpha = CLAMP_MIN(this->effects[i].alpha - 20, 0);
-                        } else { // regular alpha oscillating
-                            sineAlpha = (u8)(100.0f * Math_SinS((play->gameplayFrames - (s16)this->effects[i].pos.x) * 0x200) + 100.0f);
-                            this->effects[i].alpha = CLAMP(this->effects[i].alpha + 5, 0, sineAlpha);
-                        }
-                    }
-                    break;
-            }
-
-            Matrix_Translate(this->effects[i].pos.x,
-                             this->effects[i].pos.y,
-                             this->effects[i].pos.z, MTXMODE_NEW);
-            Matrix_RotateX(BINANG_TO_RAD(-0x4000), MTXMODE_APPLY);
-            Matrix_RotateZ(BINANG_TO_RAD(this->effects[i].angle), MTXMODE_APPLY);
-            Matrix_Scale(this->effects[i].scale, this->effects[i].scale, this->effects[i].scale, MTXMODE_APPLY);
-            gDPPipeSync(POLY_XLU_DISP++);
-
-            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, this->effectPrimColor.r, this->effectPrimColor.g, this->effectPrimColor.b, this->effects[i].alpha);
-            gDPSetEnvColor(POLY_XLU_DISP++, this->effectEnvColor.r, this->effectEnvColor.g, this->effectEnvColor.b, this->effects[i].alpha);
-
-            MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx, "../z_object_kankyo.c", 1107);
-
-            gSPSegment(POLY_XLU_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(gDust5Tex));
-
-            gDPPipeSync(POLY_XLU_DISP++);
-
-            gSPDisplayList(POLY_XLU_DISP++, gEffDustDL);
-
-            gDPPipeSync(POLY_XLU_DISP++);
+    if (vtx != NULL) {
+        for (i = 0; i < ARRAY_COUNT(PlaneDL_PlaneDL_mesh_layer_Transparent_vtx_0); i++) {
+            vtx[i].v.ob[1] = (s16)(300.0f * (Math_SinS((gameplayFrames + vtx[i].v.ob[0]) * 0x200) + Math_CosS((gameplayFrames + vtx[i].v.ob[2]) * 0x200))); // y
         }
-
-        CLOSE_DISPS(play->state.gfxCtx, "../z_object_kankyo.c", 1127);
     }
+
+    OPEN_DISPS(play->state.gfxCtx, "../z_bg_mizu_water.c", 738);
+	func_8003435C(&this->actor.world.pos, play);
+    Gfx_SetupDL_25Xlu(play->state.gfxCtx);
+
+    gSPSegment(POLY_XLU_DISP++, 0x08,
+               Gfx_TwoTexScroll(play->state.gfxCtx, G_TX_RENDERTILE, -gameplayFrames * 1, gameplayFrames * 1, 32, 32, 1,
+                                0, -gameplayFrames * 1, 32, 32));
+
+    MATRIX_FINALIZE_AND_LOAD(POLY_XLU_DISP++, play->state.gfxCtx, "../z_bg_mizu_water.c", 749);
+
+	gSPDisplayList(POLY_XLU_DISP++, PlaneDL);
+
+    CLOSE_DISPS(play->state.gfxCtx, "../z_bg_mizu_water.c", 756);
 }
